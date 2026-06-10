@@ -117,9 +117,9 @@
             Firebase är inte konfigurerat — kuponger sparas bara lokalt på din enhet.
         </div>
         <div class="card">
-            <div class="ct">Skapa ny kupong</div>
-            <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Anna Andersson"></div>
-            <button class="create-btn" onclick="createLink()">Skapa länk</button>
+            <div class="ct">Skapa kupong</div>
+            <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Anna Andersson" autocomplete="off"></div>
+            <button class="create-btn" id="create-btn" onclick="createLink()">Skapa kupong</button>
             <div id="created-result"></div>
         </div>
         <div class="card" id="links-card">
@@ -346,6 +346,7 @@ function showAdminContent() {
     document.getElementById('links-list').style.display = 'block';
     document.getElementById('logout-btn').style.display = 'block';
     document.getElementById('logout-btn2').style.display = 'block';
+    document.getElementById('create-btn').textContent = 'Skapa länk';
     if (!db) document.getElementById('fb-notice').style.display = 'block';
     startAdminListener();
 }
@@ -403,6 +404,13 @@ async function createLink() {
         } catch(e) {}
     }
 
+    const isAdmin = sessionStorage.getItem('adminAuth') === 'ok';
+
+    if (!isAdmin) {
+        location.href = url;
+        return;
+    }
+
     const nameLabel = name ? ` för ${name}` : '';
     document.getElementById('created-result').innerHTML = `
         <div class="created-box">
@@ -410,7 +418,6 @@ async function createLink() {
             <div class="cu">${url}</div>
             <div class="ub">
                 <button class="bcp" onclick="copyText('${url}')">Kopiera länk</button>
-                <a class="la-open" href="${url}" style="text-decoration:none">Öppna</a>
                 ${navigator.share ? `<button class="bsh" onclick="doShare('${url}','${name}')">Dela</button>` : ''}
             </div>
         </div>`;
