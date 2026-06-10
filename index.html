@@ -508,7 +508,10 @@ function copyModalUrl() {
 
 document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>
