@@ -118,7 +118,10 @@
             <div id="created-result"></div>
         </div>
         <div class="card" id="links-card" style="display:none">
-            <div class="ct">Skapade kuponger</div>
+            <div class="ct" style="display:flex;justify-content:space-between;align-items:center">
+                <span>Skapade kuponger</span>
+                <button style="background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;color:#555" onclick="copyText(location.origin+location.pathname)">Kopiera adminlänk</button>
+            </div>
             <div id="links-list"></div>
         </div>
     </div>
@@ -275,10 +278,26 @@ if (kupongId) {
     initParticipant();
 } else {
     if (!db) document.getElementById('fb-notice').style.display = 'block';
-    renderLinksList();
+    initAdmin();
 }
 
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
+
+async function initAdmin() {
+    if (db) {
+        try {
+            const snap = await db.collection('meta').doc('links').get();
+            if (snap.exists) {
+                const fbLinks = snap.data().list || [];
+                const local = JSON.parse(localStorage.getItem('vmt26_links') || '[]');
+                const seen = new Set();
+                const merged = [...fbLinks, ...local].filter(l => seen.has(l.id) ? false : seen.add(l.id));
+                localStorage.setItem('vmt26_links', JSON.stringify(merged));
+            }
+        } catch(e) {}
+    }
+    renderLinksList();
+}
 
 function genId() {
     return Math.random().toString(36).substr(2, 8);
@@ -298,9 +317,19 @@ async function createLink() {
         } catch(e) {}
     }
 
+    const entry = { id, name, createdAt: new Date().toISOString() };
     const links = JSON.parse(localStorage.getItem('vmt26_links') || '[]');
-    links.push({ id, name, createdAt: new Date().toISOString() });
+    links.push(entry);
     localStorage.setItem('vmt26_links', JSON.stringify(links));
+
+    if (db) {
+        try {
+            await db.collection('meta').doc('links').set(
+                { list: firebase.firestore.FieldValue.arrayUnion(entry) },
+                { merge: true }
+            );
+        } catch(e) {}
+    }
 
     const nameLabel = name ? ` för ${name}` : '';
     document.getElementById('created-result').innerHTML = `
