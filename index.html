@@ -79,6 +79,9 @@
         .link-actions a, .link-actions button { padding: 7px 11px; border-radius: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-block; }
         .la-cp { background: #f0f0f0; color: #333; }
         .la-open { background: #003087; color: #fff; }
+        .la-del { background: #fee2e2; color: #c00; }
+        .la-del:hover { background: #fca5a5; }
+        #pw-err { color: #c00; font-size: .82rem; margin-top: 6px; display: none; }
 
         .notice { padding: 10px 12px; background: #fff8e1; border-left: 3px solid #f59e0b; border-radius: 6px; font-size: .82rem; color: #7a5c00; margin-bottom: 11px; }
 
@@ -104,25 +107,42 @@
     <header>
         <div class="hd">
             <span style="font-size:1.6rem;line-height:1">⚽</span>
-            <div><h1>VM 2026 Tipskupong</h1><div class="hs">Skapa och hantera kuponger</div></div>
+            <div><h1>VM 2026 Tipskupong</h1><div class="hs" id="admin-hs">Logga in</div></div>
         </div>
+        <button id="logout-btn" onclick="logout()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:.8rem;cursor:pointer">Logga ut</button>
     </header>
-    <div class="wrap">
-        <div id="fb-notice" class="notice" style="display:none">
-            Firebase är inte konfigurerat — kuponger sparas bara lokalt på din enhet.
-        </div>
+
+    <!-- Inloggning -->
+    <div id="login-view" class="wrap">
         <div class="card">
-            <div class="ct">Skapa ny kupong</div>
-            <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Pappa"></div>
-            <button class="create-btn" onclick="createLink()">Skapa länk</button>
-            <div id="created-result"></div>
-        </div>
-        <div class="card" id="links-card" style="display:none">
-            <div class="ct" style="display:flex;justify-content:space-between;align-items:center">
-                <span>Skapade kuponger</span>
-                <button style="background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;color:#555" onclick="copyText(location.origin+location.pathname)">Kopiera adminlänk</button>
+            <div class="ct" id="login-title">Admin</div>
+            <div class="fi"><label id="pw-label">Lösenord</label>
+                <input type="password" id="pw-input" placeholder="Ange lösenord" onkeydown="if(event.key==='Enter')tryLogin()">
             </div>
-            <div id="links-list"></div>
+            <div id="pw-err">Fel lösenord – försök igen</div>
+            <button class="create-btn" id="pw-btn" onclick="tryLogin()">Logga in</button>
+        </div>
+    </div>
+
+    <!-- Admin-innehåll (dolt tills inloggad) -->
+    <div id="admin-content" style="display:none">
+        <div class="wrap">
+            <div id="fb-notice" class="notice" style="display:none">
+                Firebase är inte konfigurerat — kuponger sparas bara lokalt på din enhet.
+            </div>
+            <div class="card">
+                <div class="ct">Skapa ny kupong</div>
+                <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Pappa"></div>
+                <button class="create-btn" onclick="createLink()">Skapa länk</button>
+                <div id="created-result"></div>
+            </div>
+            <div class="card" id="links-card" style="display:none">
+                <div class="ct" style="display:flex;justify-content:space-between;align-items:center">
+                    <span>Skapade kuponger</span>
+                    <button style="background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;color:#555" onclick="copyText(location.origin+location.pathname)">Kopiera adminlänk</button>
+                </div>
+                <div id="links-list"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -283,7 +303,68 @@ if (kupongId) {
 
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
 
-function initAdmin() {
+async function initAdmin() {
+    if (sessionStorage.getItem('adminAuth') === 'ok') {
+        showAdminContent();
+    } else {
+        await checkFirstRun();
+    }
+}
+
+async function checkFirstRun() {
+    if (!db) { showAdminContent(); return; }
+    try {
+        const snap = await db.collection('meta').doc('config').get();
+        if (!snap.exists || !snap.data().adminPassword) {
+            document.getElementById('login-title').textContent = 'Välj adminlösenord';
+            document.getElementById('pw-label').textContent = 'Välj ett lösenord';
+            document.getElementById('pw-btn').textContent = 'Spara lösenord';
+            document.getElementById('pw-btn').onclick = savePassword;
+        }
+    } catch(e) {}
+}
+
+async function tryLogin() {
+    const pw = document.getElementById('pw-input').value;
+    if (!pw) return;
+    if (!db) { showAdminContent(); return; }
+    try {
+        const snap = await db.collection('meta').doc('config').get();
+        if (snap.exists && snap.data().adminPassword === pw) {
+            sessionStorage.setItem('adminAuth', 'ok');
+            document.getElementById('pw-err').style.display = 'none';
+            showAdminContent();
+        } else {
+            document.getElementById('pw-err').style.display = 'block';
+        }
+    } catch(e) {}
+}
+
+async function savePassword() {
+    const pw = document.getElementById('pw-input').value.trim();
+    if (!pw) return;
+    try {
+        await db.collection('meta').doc('config').set({ adminPassword: pw }, { merge: true });
+        sessionStorage.setItem('adminAuth', 'ok');
+        showAdminContent();
+    } catch(e) {}
+}
+
+function showAdminContent() {
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('admin-content').style.display = 'block';
+    document.getElementById('admin-hs').textContent = 'Skapa och hantera kuponger';
+    document.getElementById('logout-btn').style.display = 'block';
+    if (!db) document.getElementById('fb-notice').style.display = 'block';
+    startAdminListener();
+}
+
+function logout() {
+    sessionStorage.removeItem('adminAuth');
+    location.reload();
+}
+
+function startAdminListener() {
     if (db) {
         db.collection('kuponger').onSnapshot(snapshot => {
             const docs = snapshot.docs.map(d => ({
@@ -362,9 +443,15 @@ function renderLinksFromData(links) {
             <div class="link-actions">
                 <button class="la-cp" onclick="copyText('${url}')">Kopiera</button>
                 <a class="la-open" href="${url}">Öppna</a>
+                <button class="la-del" onclick="deleteKupong('${l.id}','${l.name}')">✕</button>
             </div>
         </div>`;
     }).join('');
+}
+
+async function deleteKupong(id, name) {
+    if (!confirm(`Ta bort kupong för "${name || id}"?`)) return;
+    if (db) await db.collection('kuponger').doc(id).delete().catch(() => {});
 }
 
 function renderLinksList() {
