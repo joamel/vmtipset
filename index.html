@@ -329,9 +329,21 @@ function render() {
     // Load from URL hash or localStorage
     const hash = location.hash;
     if (hash.startsWith('#d=')) {
-        try { applyState(dec(hash.slice(3))); return; } catch(e) {}
+        try {
+            applyState(dec(hash.slice(3)));
+            document.getElementById('bar').innerHTML = `
+                <button class="btn bd" onclick="dlXlsx()">Ladda ner VM-kupong</button>
+                <button class="btn bs" onclick="nyKupong()">Ny blank kupong</button>
+            `;
+            return;
+        } catch(e) {}
     }
     try { applyState(JSON.parse(localStorage.getItem('vmt26'))); } catch(e) {}
+}
+
+function nyKupong() {
+    try { localStorage.removeItem('vmt26'); } catch(e) {}
+    location.href = location.origin + location.pathname;
 }
 
 document.getElementById('modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
