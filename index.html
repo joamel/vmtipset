@@ -8,6 +8,8 @@
     <meta name="apple-mobile-web-app-title" content="VM Tips">
     <link rel="manifest" href="manifest.json">
     <title>VM 2026 – Tipskupong</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #1a1a1a; }
@@ -17,6 +19,7 @@
         header h1 { font-size: 1.05rem; font-weight: 700; }
         .hs { font-size: .72rem; opacity: .7; margin-top: 1px; }
         #prog { background: rgba(255,255,255,.2); padding: 4px 10px; border-radius: 20px; font-size: .8rem; font-weight: 700; }
+        #save-st { font-size: .72rem; color: rgba(255,255,255,.8); margin-right: 6px; }
 
         .wrap { max-width: 700px; margin: 0 auto; padding: 12px 10px 100px; }
 
@@ -32,7 +35,6 @@
 
         .gh { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #b06500; padding: 11px 0 3px; border-top: 1px solid #eee; margin-top: 2px; }
         .gh:first-child { border-top: none; padding-top: 0; }
-
         .m { display: grid; grid-template-columns: 40px 1fr auto 1fr; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #f2f2f2; }
         .m:last-child { border-bottom: none; }
         .mn { font-size: .68rem; color: #aaa; line-height: 1.4; text-align: center; }
@@ -51,7 +53,36 @@
         .btn { padding: 11px 0; border: none; border-radius: 8px; font-size: .93rem; font-weight: 700; cursor: pointer; flex: 1; max-width: 230px; }
         .bs { background: #003087; color: #fff; }
         .bd { background: #1a9e3f; color: #fff; }
+        .bo { background: #f0f0f0; color: #555; }
 
+        /* Admin */
+        .create-btn { width: 100%; margin-top: 12px; padding: 13px; background: #1a9e3f; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+        .create-btn:active { background: #157d33; }
+        .created-box { margin-top: 12px; padding: 12px; background: #f0f9f4; border: 1.5px solid #4caf50; border-radius: 8px; }
+        .created-box .cl { font-size: .72rem; font-weight: 700; text-transform: uppercase; color: #1a9e3f; margin-bottom: 6px; }
+        .created-box .cu { font-size: .78rem; color: #333; word-break: break-all; font-family: monospace; margin-bottom: 10px; background: #fff; padding: 8px; border-radius: 5px; }
+        .ub { display: flex; gap: 8px; }
+        .ub button { flex: 1; padding: 10px; border: none; border-radius: 7px; font-size: .9rem; font-weight: 700; cursor: pointer; }
+        .ub .bcp { background: #003087; color: #fff; }
+        .ub .bsh { background: #e8edf5; color: #003087; }
+
+        .link-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f2f2f2; gap: 8px; }
+        .link-row:last-child { border-bottom: none; }
+        .link-info { flex: 1; min-width: 0; }
+        .link-name { font-weight: 600; font-size: .9rem; }
+        .link-date { font-size: .72rem; color: #999; margin-top: 2px; }
+        .link-status { font-size: .72rem; font-weight: 600; margin-top: 3px; }
+        .link-status.done { color: #1a9e3f; }
+        .link-status.partial { color: #e67e00; }
+        .link-status.empty { color: #aaa; }
+        .link-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .link-actions a, .link-actions button { padding: 7px 11px; border-radius: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-block; }
+        .la-cp { background: #f0f0f0; color: #333; }
+        .la-open { background: #003087; color: #fff; }
+
+        .notice { padding: 10px 12px; background: #fff8e1; border-left: 3px solid #f59e0b; border-radius: 6px; font-size: .82rem; color: #7a5c00; margin-bottom: 11px; }
+
+        /* Modal */
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-end; justify-content: center; }
         #modal.on { display: flex; }
         .mb { background: #fff; border-radius: 16px 16px 0 0; padding: 20px 16px 32px; width: 100%; max-width: 580px; }
@@ -59,8 +90,8 @@
         .ms { color: #666; font-size: .85rem; margin-bottom: 13px; }
         #ubox { width: 100%; padding: 9px; border: 1.5px solid #ddd; border-radius: 7px; font-size: .75rem; color: #444; word-break: break-all; background: #f8f8f8; resize: none; height: 72px; font-family: monospace; }
         .mbt { display: flex; gap: 8px; margin-top: 9px; }
-        .bcp { background: #003087; color: #fff; border: none; padding: 11px 0; border-radius: 8px; font-size: .93rem; font-weight: 700; cursor: pointer; flex: 1; }
-        .bcl { background: #f0f0f0; color: #333; border: none; padding: 11px 20px; border-radius: 8px; font-size: .93rem; font-weight: 600; cursor: pointer; }
+        .bcp2 { background: #003087; color: #fff; border: none; padding: 11px 0; border-radius: 8px; font-size: .93rem; font-weight: 700; cursor: pointer; flex: 1; }
+        .bcl2 { background: #f0f0f0; color: #333; border: none; padding: 11px 20px; border-radius: 8px; font-size: .93rem; font-weight: 600; cursor: pointer; }
 
         #toast { position: fixed; top: 66px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 9px 18px; border-radius: 20px; font-size: .88rem; z-index: 300; opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap; }
         #toast.on { opacity: 1; }
@@ -68,50 +99,97 @@
 </head>
 <body>
 
-<header>
-    <div class="hd">
-        <span style="font-size:1.6rem;line-height:1">⚽</span>
-        <div><h1>VM 2026 Tipskupong</h1><div class="hs">Fyll i namn + alla 72 resultat, tryck sedan Dela</div></div>
-    </div>
-    <div id="prog">0 / 72</div>
-</header>
-
-<div class="wrap">
-    <div class="card">
-        <div class="ct">Dina uppgifter</div>
-        <div class="ig">
-            <div class="fi"><label>Namn</label><input type="text" id="fn" placeholder="För- och efternamn" oninput="save()"></div>
-            <div class="fi"><label>Alias</label><input type="text" id="fa" placeholder="Smeknamn" oninput="save()"></div>
-            <div class="fi ef"><label>E-mail</label><input type="email" id="fe" placeholder="din@email.se" oninput="save()"></div>
+<!-- ===================== ADMIN PAGE ===================== -->
+<div id="admin-page">
+    <header>
+        <div class="hd">
+            <span style="font-size:1.6rem;line-height:1">⚽</span>
+            <div><h1>VM 2026 Tipskupong</h1><div class="hs">Skapa och hantera kuponger</div></div>
         </div>
-    </div>
-    <div class="card">
-        <div class="ct">Matcher <span style="font-weight:400;color:#999;font-size:.9em;text-transform:none;letter-spacing:0">— hemma / borta mål</span></div>
-        <div id="ml"></div>
+    </header>
+    <div class="wrap">
+        <div id="fb-notice" class="notice" style="display:none">
+            Firebase är inte konfigurerat — kuponger sparas bara lokalt på din enhet.
+        </div>
+        <div class="card">
+            <div class="ct">Skapa ny kupong</div>
+            <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Pappa"></div>
+            <button class="create-btn" onclick="createLink()">Skapa länk</button>
+            <div id="created-result"></div>
+        </div>
+        <div class="card" id="links-card" style="display:none">
+            <div class="ct">Skapade kuponger</div>
+            <div id="links-list"></div>
+        </div>
     </div>
 </div>
 
-<div id="bar">
-    <button class="btn bd" onclick="share()">Dela länk</button>
-    <button class="btn bs" onclick="dlXlsx()">Ladda ner VM-kupong</button>
+<!-- =================== PARTICIPANT PAGE =================== -->
+<div id="participant-page" style="display:none">
+    <header>
+        <div class="hd">
+            <span style="font-size:1.6rem;line-height:1">⚽</span>
+            <div><h1>VM 2026 Tipskupong</h1><div class="hs">Fyll i namn + alla 72 resultat</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+            <div id="save-st"></div>
+            <div id="prog">0 / 72</div>
+        </div>
+    </header>
+    <div class="wrap">
+        <div class="card">
+            <div class="ct">Dina uppgifter</div>
+            <div class="ig">
+                <div class="fi"><label>Namn</label><input type="text" id="fn" placeholder="För- och efternamn" oninput="save()"></div>
+                <div class="fi"><label>Alias</label><input type="text" id="fa" placeholder="Smeknamn" oninput="save()"></div>
+                <div class="fi ef"><label>E-mail</label><input type="email" id="fe" placeholder="din@email.se" oninput="save()"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="ct">Matcher <span style="font-weight:400;color:#999;font-size:.9em;text-transform:none;letter-spacing:0">— hemma / borta mål</span></div>
+            <div id="ml"></div>
+        </div>
+    </div>
+    <div id="bar">
+        <button class="btn bd" onclick="dlXlsx()">Ladda ner VM-kupong</button>
+    </div>
 </div>
 
 <div id="modal">
     <div class="mb">
-        <div class="mt">Dela dina tips</div>
-        <div class="ms">Kopiera länken och skicka till Joakim via SMS eller mail.</div>
+        <div class="mt">Dela länk</div>
+        <div class="ms">Kopiera och skicka länken.</div>
         <textarea id="ubox" readonly></textarea>
         <div class="mbt">
-            <button class="bcp" onclick="copyUrl()">Kopiera länken</button>
-            <button class="bcl" onclick="closeModal()">Stäng</button>
+            <button class="bcp2" onclick="copyModalUrl()">Kopiera länken</button>
+            <button class="bcl2" onclick="closeModal()">Stäng</button>
         </div>
     </div>
 </div>
-
 <div id="toast"></div>
 
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+// ─── FIREBASE CONFIG — fyll i efter att du skapat projektet ──────────────────
+const FB = {
+    apiKey:            "REPLACE",
+    authDomain:        "REPLACE",
+    projectId:         "REPLACE",
+    storageBucket:     "REPLACE",
+    messagingSenderId: "REPLACE",
+    appId:             "REPLACE"
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+let db = null;
+try {
+    if (FB.apiKey !== 'REPLACE') {
+        firebase.initializeApp(FB);
+        db = firebase.firestore();
+    }
+} catch(e) {}
+
+// ─── MATCHER ─────────────────────────────────────────────────────────────────
 const M = [
     {r:2,  d:"Torsdag 11 juni",  t:"21.00", h:"Mexiko",                  b:"Sydafrika",                g:"Grupp A"},
     {r:3,  d:"Fredag 12 juni",   t:"04.00", h:"Sydkorea",                b:"Tjeckien",                 g:"Grupp A"},
@@ -187,14 +265,114 @@ const M = [
     {r:73, d:"Söndag 28 juni",   t:"04.00", h:"Jordanien",               b:"Argentina",                g:"Grupp J"},
 ];
 
+// ─── ROUTING ─────────────────────────────────────────────────────────────────
+const kupongId = new URLSearchParams(location.search).get('k');
+
+if (kupongId) {
+    document.getElementById('admin-page').style.display = 'none';
+    document.getElementById('participant-page').style.display = 'block';
+    initParticipant();
+} else {
+    if (!db) document.getElementById('fb-notice').style.display = 'block';
+    renderLinksList();
+}
+
+// ─── ADMIN ────────────────────────────────────────────────────────────────────
+
+function genId() {
+    return Math.random().toString(36).substr(2, 8);
+}
+
+async function createLink() {
+    const name = document.getElementById('new-name').value.trim();
+    const id = genId();
+    const url = location.origin + location.pathname + '?k=' + id;
+
+    if (db) {
+        try {
+            await db.collection('kuponger').doc(id).set({
+                namn: name, alias: '', email: '', tips: [],
+                createdAt: new Date().toISOString()
+            });
+        } catch(e) {}
+    }
+
+    const links = JSON.parse(localStorage.getItem('vmt26_links') || '[]');
+    links.push({ id, name, createdAt: new Date().toISOString() });
+    localStorage.setItem('vmt26_links', JSON.stringify(links));
+
+    const nameLabel = name ? ` för ${name}` : '';
+    document.getElementById('created-result').innerHTML = `
+        <div class="created-box">
+            <div class="cl">✓ Kupong skapad${nameLabel}</div>
+            <div class="cu">${url}</div>
+            <div class="ub">
+                <button class="bcp" onclick="copyText('${url}')">Kopiera länk</button>
+                ${navigator.share ? `<button class="bsh" onclick="doShare('${url}','${name}')">Dela</button>` : ''}
+            </div>
+        </div>`;
+
+    document.getElementById('new-name').value = '';
+    renderLinksList();
+}
+
+function renderLinksList() {
+    const links = JSON.parse(localStorage.getItem('vmt26_links') || '[]');
+    if (!links.length) { document.getElementById('links-card').style.display = 'none'; return; }
+    document.getElementById('links-card').style.display = 'block';
+    const el = document.getElementById('links-list');
+    el.innerHTML = [...links].reverse().map(l => {
+        const url = location.origin + location.pathname + '?k=' + l.id;
+        const date = new Date(l.createdAt).toLocaleDateString('sv-SE');
+        return `<div class="link-row">
+            <div class="link-info">
+                <div class="link-name">${l.name || 'Namnlös kupong'}</div>
+                <div class="link-date">Skapad ${date}</div>
+            </div>
+            <div class="link-actions">
+                <button class="la-cp" onclick="copyText('${url}')">Kopiera</button>
+                <a class="la-open" href="${url}">Öppna</a>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => toast('Länken är kopierad!'))
+        .catch(() => toast('Länken är kopierad!'));
+}
+
+function doShare(url, name) {
+    navigator.share({ title: `VM 2026 tips${name ? ' – ' + name : ''}`, url }).catch(() => {});
+}
+
+// ─── PARTICIPANT ──────────────────────────────────────────────────────────────
+
+let saveTimer = null;
+
+async function initParticipant() {
+    render();
+    if (db) {
+        try {
+            const snap = await db.collection('kuponger').doc(kupongId).get();
+            if (snap.exists()) applyState(snap.data());
+            return;
+        } catch(e) {}
+    }
+    try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
+}
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
 function getState() {
     return {
         namn:  document.getElementById('fn').value,
         alias: document.getElementById('fa').value,
         email: document.getElementById('fe').value,
         tips:  M.map((_, i) => [
-            document.getElementById('h'+i).value,
-            document.getElementById('a'+i).value
+            document.getElementById('h'+i)?.value ?? '',
+            document.getElementById('a'+i)?.value ?? ''
         ])
     };
 }
@@ -207,15 +385,32 @@ function applyState(s) {
     if (s.tips) s.tips.forEach(([h, a], i) => {
         const he = document.getElementById('h'+i);
         const ae = document.getElementById('a'+i);
-        if (he && h !== '' && h !== null) { he.value = h; he.classList.toggle('ok', true); }
-        if (ae && a !== '' && a !== null) { ae.value = a; ae.classList.toggle('ok', true); }
+        if (he && h !== '' && h != null) { he.value = h; he.classList.add('ok'); }
+        if (ae && a !== '' && a != null) { ae.value = a; ae.classList.add('ok'); }
     });
     updateProg();
 }
 
 function save() {
-    try { localStorage.setItem('vmt26', JSON.stringify(getState())); } catch(e) {}
+    try { localStorage.setItem('vmt26_' + kupongId, JSON.stringify(getState())); } catch(e) {}
     updateProg();
+    clearTimeout(saveTimer);
+    setSaveSt('Sparar...');
+    saveTimer = setTimeout(cloudSave, 1500);
+}
+
+async function cloudSave() {
+    if (!db) { setSaveSt(''); return; }
+    try {
+        await db.collection('kuponger').doc(kupongId).set(getState(), { merge: true });
+        setSaveSt('Sparad ✓');
+        setTimeout(() => setSaveSt(''), 3000);
+    } catch(e) { setSaveSt(''); }
+}
+
+function setSaveSt(msg) {
+    const el = document.getElementById('save-st');
+    if (el) el.textContent = msg;
 }
 
 function updateProg() {
@@ -227,48 +422,40 @@ function updateProg() {
     document.getElementById('prog').textContent = n + ' / 72';
 }
 
-function enc(s) {
-    const b = btoa(unescape(encodeURIComponent(JSON.stringify(s))));
-    return b.replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-}
-function dec(str) {
-    str = str.replace(/-/g,'+').replace(/_/g,'/');
-    while (str.length % 4) str += '=';
-    return JSON.parse(decodeURIComponent(escape(atob(str))));
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+
+function render() {
+    const el = document.getElementById('ml');
+    let grp = null, n = 0;
+    M.forEach((m, i) => {
+        if (m.g !== grp) {
+            grp = m.g;
+            const g = document.createElement('div');
+            g.className = 'gh'; g.textContent = m.g;
+            el.appendChild(g);
+        }
+        n++;
+        const d = document.createElement('div');
+        d.className = 'm';
+        d.innerHTML = `<div class="mn"><b>#${n}</b>${m.t}</div>
+            <div class="th">${m.h}</div>
+            <div class="sc">
+                <input class="gi" type="number" min="0" max="20" id="h${i}" placeholder="?">
+                <span class="dash">–</span>
+                <input class="gi" type="number" min="0" max="20" id="a${i}" placeholder="?">
+            </div>
+            <div class="ta">${m.b}</div>`;
+        el.appendChild(d);
+    });
+    M.forEach((_, i) => {
+        ['h','a'].forEach(p => {
+            const inp = document.getElementById(p+i);
+            inp.addEventListener('input', () => { inp.classList.toggle('ok', inp.value !== ''); save(); });
+        });
+    });
 }
 
-function shareUrl() {
-    return location.origin + location.pathname + '#d=' + enc(getState());
-}
-
-function share() {
-    const url = shareUrl();
-    if (navigator.share) {
-        navigator.share({ title: 'Mina VM 2026-tips', url }).catch(() => showModal(url));
-    } else {
-        showModal(url);
-    }
-}
-
-function showModal(url) {
-    document.getElementById('ubox').value = url;
-    document.getElementById('modal').classList.add('on');
-}
-function closeModal() { document.getElementById('modal').classList.remove('on'); }
-
-function copyUrl() {
-    const v = document.getElementById('ubox').value;
-    (navigator.clipboard?.writeText(v) || Promise.reject())
-        .catch(() => { const b = document.getElementById('ubox'); b.select(); document.execCommand('copy'); })
-        .finally(() => { toast('Länken är kopierad!'); closeModal(); });
-}
-
-function toast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('on');
-    setTimeout(() => el.classList.remove('on'), 2500);
-}
+// ─── EXCEL ────────────────────────────────────────────────────────────────────
 
 function dlXlsx() {
     if (typeof XLSX === 'undefined') { toast('Laddar... försök igen om ett ögonblick'); return; }
@@ -295,62 +482,26 @@ function dlXlsx() {
     toast('Excel-filen laddas ner...');
 }
 
-function render() {
-    const el = document.getElementById('ml');
-    let grp = null, n = 0;
-    M.forEach((m, i) => {
-        if (m.g !== grp) {
-            grp = m.g;
-            const g = document.createElement('div');
-            g.className = 'gh'; g.textContent = m.g;
-            el.appendChild(g);
-        }
-        n++;
-        const d = document.createElement('div');
-        d.className = 'm';
-        d.innerHTML = `<div class="mn"><b>#${n}</b>${m.t}</div>
-            <div class="th">${m.h}</div>
-            <div class="sc">
-                <input class="gi" type="number" min="0" max="20" id="h${i}" placeholder="?">
-                <span class="dash">–</span>
-                <input class="gi" type="number" min="0" max="20" id="a${i}" placeholder="?">
-            </div>
-            <div class="ta">${m.b}</div>`;
-        el.appendChild(d);
-    });
+// ─── UTILS ────────────────────────────────────────────────────────────────────
 
-    M.forEach((_, i) => {
-        ['h','a'].forEach(p => {
-            const inp = document.getElementById(p+i);
-            inp.addEventListener('input', () => { inp.classList.toggle('ok', inp.value !== ''); save(); });
-        });
-    });
-
-    // Load from URL hash or localStorage
-    const hash = location.hash;
-    if (hash.startsWith('#d=')) {
-        try {
-            applyState(dec(hash.slice(3)));
-            document.getElementById('bar').innerHTML = `
-                <button class="btn bd" onclick="dlXlsx()">Ladda ner VM-kupong</button>
-                <button class="btn bs" onclick="nyKupong()">Ny blank kupong</button>
-            `;
-            return;
-        } catch(e) {}
-    }
-    try { applyState(JSON.parse(localStorage.getItem('vmt26'))); } catch(e) {}
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('on');
+    setTimeout(() => el.classList.remove('on'), 2500);
 }
 
-function nyKupong() {
-    try { localStorage.removeItem('vmt26'); } catch(e) {}
-    location.href = location.origin + location.pathname;
+function closeModal() { document.getElementById('modal').classList.remove('on'); }
+function copyModalUrl() {
+    const v = document.getElementById('ubox').value;
+    navigator.clipboard.writeText(v)
+        .catch(() => { const b = document.getElementById('ubox'); b.select(); document.execCommand('copy'); })
+        .finally(() => { toast('Länken är kopierad!'); closeModal(); });
 }
 
-document.getElementById('modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
+document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
-render();
-
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
 </html>
