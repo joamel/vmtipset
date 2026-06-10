@@ -118,8 +118,10 @@
         </div>
         <div class="card">
             <div class="ct">Skapa kupong</div>
-            <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Anna Andersson" autocomplete="off"></div>
-            <button class="create-btn" id="create-btn" onclick="createLink()">Skapa kupong</button>
+            <form autocomplete="off" onsubmit="createLink();return false">
+                <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Anna Andersson" autocomplete="off"></div>
+                <button class="create-btn" id="create-btn" type="submit">Skapa kupong</button>
+            </form>
             <div id="created-result"></div>
         </div>
         <div class="card" id="links-card">
@@ -128,11 +130,13 @@
                 <button id="logout-btn2" onclick="logout()" style="display:none;background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;color:#555">Logga ut</button>
             </div>
             <div id="pw-section">
-                <div class="fi" style="margin-bottom:8px">
-                    <input type="password" id="pw-input" placeholder="Adminlösenord" autocomplete="current-password" onkeydown="if(event.key==='Enter')tryLogin()">
-                </div>
-                <div id="pw-err">Fel lösenord – försök igen</div>
-                <button class="create-btn" id="pw-btn" onclick="tryLogin()" style="margin-top:0">Lås upp</button>
+                <form onsubmit="tryLogin();return false">
+                    <div class="fi" style="margin-bottom:8px">
+                        <input type="password" id="pw-input" placeholder="Adminlösenord" autocomplete="current-password">
+                    </div>
+                    <div id="pw-err">Fel lösenord – försök igen</div>
+                    <button class="create-btn" id="pw-btn" type="submit" style="margin-top:0">Lås upp</button>
+                </form>
             </div>
             <div id="links-list" style="display:none"></div>
         </div>
