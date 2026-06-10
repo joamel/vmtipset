@@ -404,7 +404,7 @@ function save() {
 async function cloudSave() {
     if (!db) { setSaveSt(''); return; }
     try {
-        await db.collection('kuponger').doc(kupongId).set(getState(), { merge: true });
+        await db.collection('kuponger').doc(kupongId).update(getState());
         setSaveSt('Sparad ✓');
         setTimeout(() => setSaveSt(''), 3000);
     } catch(e) { setSaveSt(''); }
