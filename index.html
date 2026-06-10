@@ -424,7 +424,7 @@ async function createLink() {
         </div>`;
 
     document.getElementById('new-name').value = '';
-    renderLinksList();
+    if (!db) renderLinksList();
 }
 
 function renderLinksFromData(links) {
