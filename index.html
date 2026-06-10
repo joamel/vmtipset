@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#003087">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="VM Tips">
+    <link rel="manifest" href="manifest.json">
+    <title>VM 2026 – Tipskupong</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #1a1a1a; }
+
+        header { background: #003087; color: #fff; padding: 13px 14px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+        .hd { display: flex; align-items: center; gap: 10px; }
+        header h1 { font-size: 1.05rem; font-weight: 700; }
+        .hs { font-size: .72rem; opacity: .7; margin-top: 1px; }
+        #prog { background: rgba(255,255,255,.2); padding: 4px 10px; border-radius: 20px; font-size: .8rem; font-weight: 700; }
+
+        .wrap { max-width: 700px; margin: 0 auto; padding: 12px 10px 100px; }
+
+        .card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 11px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+        .ct { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #003087; margin-bottom: 11px; }
+
+        .ig { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+        .ig .ef { grid-column: span 2; }
+        @media(min-width:480px) { .ig { grid-template-columns: 1fr 1fr 2fr; } .ig .ef { grid-column: auto; } }
+        .fi label { display: block; font-size: .7rem; font-weight: 600; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+        .fi input { width: 100%; padding: 9px 10px; border: 1.5px solid #ddd; border-radius: 7px; font-size: .92rem; background: #fafafa; transition: border-color .13s; }
+        .fi input:focus { outline: none; border-color: #003087; background: #fff; }
+
+        .gh { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #b06500; padding: 11px 0 3px; border-top: 1px solid #eee; margin-top: 2px; }
+        .gh:first-child { border-top: none; padding-top: 0; }
+
+        .m { display: grid; grid-template-columns: 40px 1fr auto 1fr; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #f2f2f2; }
+        .m:last-child { border-bottom: none; }
+        .mn { font-size: .68rem; color: #aaa; line-height: 1.4; text-align: center; }
+        .mn b { color: #003087; display: block; font-size: .76rem; }
+        .th { text-align: right; font-size: .87rem; }
+        .ta { font-size: .87rem; }
+        .sc { display: flex; align-items: center; gap: 3px; }
+        .gi { width: 40px; padding: 7px 0; text-align: center; border: 1.5px solid #d0d0d0; border-radius: 6px; font-size: 1rem; font-weight: 700; background: #f8f8f8; transition: border-color .12s, background .12s; }
+        .gi:focus { outline: none; border-color: #003087; background: #f0f5ff; }
+        .gi.ok { border-color: #4caf50; background: #f0faf0; }
+        .gi::-webkit-inner-spin-button, .gi::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .gi { -moz-appearance: textfield; }
+        .dash { color: #ccc; font-size: .85rem; }
+
+        #bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e0e0e0; padding: 9px 10px; display: flex; gap: 8px; justify-content: center; box-shadow: 0 -2px 10px rgba(0,0,0,.07); }
+        .btn { padding: 11px 0; border: none; border-radius: 8px; font-size: .93rem; font-weight: 700; cursor: pointer; flex: 1; max-width: 230px; }
+        .bs { background: #003087; color: #fff; }
+        .bd { background: #1a9e3f; color: #fff; }
+
+        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-end; justify-content: center; }
+        #modal.on { display: flex; }
+        .mb { background: #fff; border-radius: 16px 16px 0 0; padding: 20px 16px 32px; width: 100%; max-width: 580px; }
+        .mt { font-weight: 700; font-size: 1rem; margin-bottom: 5px; }
+        .ms { color: #666; font-size: .85rem; margin-bottom: 13px; }
+        #ubox { width: 100%; padding: 9px; border: 1.5px solid #ddd; border-radius: 7px; font-size: .75rem; color: #444; word-break: break-all; background: #f8f8f8; resize: none; height: 72px; font-family: monospace; }
+        .mbt { display: flex; gap: 8px; margin-top: 9px; }
+        .bcp { background: #003087; color: #fff; border: none; padding: 11px 0; border-radius: 8px; font-size: .93rem; font-weight: 700; cursor: pointer; flex: 1; }
+        .bcl { background: #f0f0f0; color: #333; border: none; padding: 11px 20px; border-radius: 8px; font-size: .93rem; font-weight: 600; cursor: pointer; }
+
+        #toast { position: fixed; top: 66px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 9px 18px; border-radius: 20px; font-size: .88rem; z-index: 300; opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap; }
+        #toast.on { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="hd">
+        <span style="font-size:1.6rem;line-height:1">⚽</span>
+        <div><h1>VM 2026 Tipskupong</h1><div class="hs">Fyll i namn + alla 72 resultat, tryck sedan Dela</div></div>
+    </div>
+    <div id="prog">0 / 72</div>
+</header>
+
+<div class="wrap">
+    <div class="card">
+        <div class="ct">Dina uppgifter</div>
+        <div class="ig">
+            <div class="fi"><label>Namn</label><input type="text" id="fn" placeholder="För- och efternamn" oninput="save()"></div>
+            <div class="fi"><label>Alias</label><input type="text" id="fa" placeholder="Smeknamn" oninput="save()"></div>
+            <div class="fi ef"><label>E-mail</label><input type="email" id="fe" placeholder="din@email.se" oninput="save()"></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="ct">Matcher <span style="font-weight:400;color:#999;font-size:.9em;text-transform:none;letter-spacing:0">— hemma / borta mål</span></div>
+        <div id="ml"></div>
+    </div>
+</div>
+
+<div id="bar">
+    <button class="btn bd" onclick="share()">Dela länk</button>
+    <button class="btn bs" onclick="dlXlsx()">Ladda ner VM-kupong</button>
+</div>
+
+<div id="modal">
+    <div class="mb">
+        <div class="mt">Dela dina tips</div>
+        <div class="ms">Kopiera länken och skicka till Joakim via SMS eller mail.</div>
+        <textarea id="ubox" readonly></textarea>
+        <div class="mbt">
+            <button class="bcp" onclick="copyUrl()">Kopiera länken</button>
+            <button class="bcl" onclick="closeModal()">Stäng</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const M = [
+    {r:2,  d:"Torsdag 11 juni",  t:"21.00", h:"Mexiko",                  b:"Sydafrika",                g:"Grupp A"},
+    {r:3,  d:"Fredag 12 juni",   t:"04.00", h:"Sydkorea",                b:"Tjeckien",                 g:"Grupp A"},
+    {r:4,  d:"Fredag 12 juni",   t:"21.00", h:"Kanada",                  b:"Bosnien och Hercegovina",  g:"Grupp B"},
+    {r:5,  d:"Lördag 13 juni",   t:"03.00", h:"USA",                     b:"Paraguay",                 g:"Grupp D"},
+    {r:6,  d:"Lördag 13 juni",   t:"21.00", h:"Qatar",                   b:"Schweiz",                  g:"Grupp B"},
+    {r:7,  d:"Söndag 14 juni",   t:"00.00", h:"Brasilien",               b:"Marocko",                  g:"Grupp C"},
+    {r:8,  d:"Söndag 14 juni",   t:"03.00", h:"Haiti",                   b:"Skottland",                g:"Grupp C"},
+    {r:9,  d:"Söndag 14 juni",   t:"06.00", h:"Australien",              b:"Turkiet",                  g:"Grupp D"},
+    {r:10, d:"Söndag 14 juni",   t:"19.00", h:"Tyskland",                b:"Curaçao",                  g:"Grupp E"},
+    {r:11, d:"Söndag 14 juni",   t:"22.00", h:"Nederländerna",           b:"Japan",                    g:"Grupp F"},
+    {r:12, d:"Måndag 15 juni",   t:"01.00", h:"Elfenbenskusten",         b:"Ecuador",                  g:"Grupp E"},
+    {r:13, d:"Måndag 15 juni",   t:"04.00", h:"Sverige",                 b:"Tunisien",                 g:"Grupp F"},
+    {r:14, d:"Måndag 15 juni",   t:"18.00", h:"Spanien",                 b:"Kap Verde",                g:"Grupp H"},
+    {r:15, d:"Måndag 15 juni",   t:"21.00", h:"Belgien",                 b:"Egypten",                  g:"Grupp G"},
+    {r:16, d:"Tisdag 16 juni",   t:"00.00", h:"Saudiarabien",            b:"Uruguay",                  g:"Grupp H"},
+    {r:17, d:"Tisdag 16 juni",   t:"03.00", h:"Iran",                    b:"Nya Zeeland",              g:"Grupp G"},
+    {r:18, d:"Tisdag 16 juni",   t:"21.00", h:"Frankrike",               b:"Senegal",                  g:"Grupp I"},
+    {r:19, d:"Onsdag 17 juni",   t:"00.00", h:"Irak",                    b:"Norge",                    g:"Grupp I"},
+    {r:20, d:"Onsdag 17 juni",   t:"03.00", h:"Argentina",               b:"Algeriet",                 g:"Grupp J"},
+    {r:21, d:"Onsdag 17 juni",   t:"06.00", h:"Österrike",               b:"Jordanien",                g:"Grupp J"},
+    {r:22, d:"Onsdag 17 juni",   t:"19.00", h:"Portugal",                b:"DR Kongo",                 g:"Grupp K"},
+    {r:23, d:"Onsdag 17 juni",   t:"22.00", h:"England",                 b:"Kroatien",                 g:"Grupp L"},
+    {r:24, d:"Torsdag 18 juni",  t:"01.00", h:"Ghana",                   b:"Panama",                   g:"Grupp L"},
+    {r:25, d:"Torsdag 18 juni",  t:"04.00", h:"Uzbekistan",              b:"Colombia",                 g:"Grupp K"},
+    {r:26, d:"Torsdag 18 juni",  t:"18.00", h:"Tjeckien",                b:"Sydafrika",                g:"Grupp A"},
+    {r:27, d:"Torsdag 18 juni",  t:"21.00", h:"Schweiz",                 b:"Bosnien och Hercegovina",  g:"Grupp B"},
+    {r:28, d:"Fredag 19 juni",   t:"00.00", h:"Kanada",                  b:"Qatar",                    g:"Grupp B"},
+    {r:29, d:"Fredag 19 juni",   t:"03.00", h:"Mexiko",                  b:"Sydkorea",                 g:"Grupp A"},
+    {r:30, d:"Fredag 19 juni",   t:"21.00", h:"USA",                     b:"Australien",               g:"Grupp D"},
+    {r:31, d:"Lördag 20 juni",   t:"00.00", h:"Skottland",               b:"Marocko",                  g:"Grupp C"},
+    {r:32, d:"Lördag 20 juni",   t:"03.00", h:"Brasilien",               b:"Haiti",                    g:"Grupp C"},
+    {r:33, d:"Lördag 20 juni",   t:"06.00", h:"Turkiet",                 b:"Paraguay",                 g:"Grupp D"},
+    {r:34, d:"Lördag 20 juni",   t:"19.00", h:"Nederländerna",           b:"Sverige",                  g:"Grupp F"},
+    {r:35, d:"Lördag 20 juni",   t:"22.00", h:"Tyskland",                b:"Elfenbenskusten",          g:"Grupp E"},
+    {r:36, d:"Söndag 21 juni",   t:"02.00", h:"Ecuador",                 b:"Curaçao",                  g:"Grupp E"},
+    {r:37, d:"Söndag 21 juni",   t:"06.00", h:"Tunisien",                b:"Japan",                    g:"Grupp F"},
+    {r:38, d:"Söndag 21 juni",   t:"18.00", h:"Spanien",                 b:"Saudiarabien",             g:"Grupp H"},
+    {r:39, d:"Söndag 21 juni",   t:"21.00", h:"Belgien",                 b:"Iran",                     g:"Grupp G"},
+    {r:40, d:"Måndag 22 juni",   t:"00.00", h:"Uruguay",                 b:"Kap Verde",                g:"Grupp H"},
+    {r:41, d:"Måndag 22 juni",   t:"03.00", h:"Nya Zeeland",             b:"Egypten",                  g:"Grupp G"},
+    {r:42, d:"Måndag 22 juni",   t:"19.00", h:"Argentina",               b:"Österrike",                g:"Grupp J"},
+    {r:43, d:"Måndag 22 juni",   t:"23.00", h:"Frankrike",               b:"Irak",                     g:"Grupp I"},
+    {r:44, d:"Tisdag 23 juni",   t:"02.00", h:"Norge",                   b:"Senegal",                  g:"Grupp I"},
+    {r:45, d:"Tisdag 23 juni",   t:"05.00", h:"Jordanien",               b:"Algeriet",                 g:"Grupp J"},
+    {r:46, d:"Tisdag 23 juni",   t:"19.00", h:"Portugal",                b:"Uzbekistan",               g:"Grupp K"},
+    {r:47, d:"Tisdag 23 juni",   t:"22.00", h:"England",                 b:"Ghana",                    g:"Grupp L"},
+    {r:48, d:"Onsdag 24 juni",   t:"01.00", h:"Panama",                  b:"Kroatien",                 g:"Grupp L"},
+    {r:49, d:"Onsdag 24 juni",   t:"04.00", h:"Colombia",                b:"DR Kongo",                 g:"Grupp K"},
+    {r:50, d:"Onsdag 24 juni",   t:"21.00", h:"Schweiz",                 b:"Kanada",                   g:"Grupp B"},
+    {r:51, d:"Onsdag 24 juni",   t:"21.00", h:"Bosnien och Hercegovina", b:"Qatar",                    g:"Grupp B"},
+    {r:52, d:"Torsdag 25 juni",  t:"00.00", h:"Skottland",               b:"Brasilien",                g:"Grupp C"},
+    {r:53, d:"Torsdag 25 juni",  t:"00.00", h:"Marocko",                 b:"Haiti",                    g:"Grupp C"},
+    {r:54, d:"Torsdag 25 juni",  t:"03.00", h:"Tjeckien",                b:"Mexiko",                   g:"Grupp A"},
+    {r:55, d:"Torsdag 25 juni",  t:"03.00", h:"Sydafrika",               b:"Sydkorea",                 g:"Grupp A"},
+    {r:56, d:"Torsdag 25 juni",  t:"22.00", h:"Curaçao",                 b:"Elfenbenskusten",          g:"Grupp E"},
+    {r:57, d:"Torsdag 25 juni",  t:"22.00", h:"Ecuador",                 b:"Tyskland",                 g:"Grupp E"},
+    {r:58, d:"Fredag 26 juni",   t:"01.00", h:"Japan",                   b:"Sverige",                  g:"Grupp F"},
+    {r:59, d:"Fredag 26 juni",   t:"01.00", h:"Tunisien",                b:"Nederländerna",            g:"Grupp F"},
+    {r:60, d:"Fredag 26 juni",   t:"04.00", h:"Turkiet",                 b:"USA",                      g:"Grupp D"},
+    {r:61, d:"Fredag 26 juni",   t:"04.00", h:"Paraguay",                b:"Australien",               g:"Grupp D"},
+    {r:62, d:"Fredag 26 juni",   t:"21.00", h:"Norge",                   b:"Frankrike",                g:"Grupp I"},
+    {r:63, d:"Fredag 26 juni",   t:"21.00", h:"Senegal",                 b:"Irak",                     g:"Grupp I"},
+    {r:64, d:"Lördag 27 juni",   t:"02.00", h:"Kap Verde",               b:"Saudiarabien",             g:"Grupp H"},
+    {r:65, d:"Lördag 27 juni",   t:"02.00", h:"Uruguay",                 b:"Spanien",                  g:"Grupp H"},
+    {r:66, d:"Lördag 27 juni",   t:"05.00", h:"Egypten",                 b:"Iran",                     g:"Grupp G"},
+    {r:67, d:"Lördag 27 juni",   t:"05.00", h:"Nya Zeeland",             b:"Belgien",                  g:"Grupp G"},
+    {r:68, d:"Lördag 27 juni",   t:"23.00", h:"Panama",                  b:"England",                  g:"Grupp L"},
+    {r:69, d:"Lördag 27 juni",   t:"23.00", h:"Kroatien",                b:"Ghana",                    g:"Grupp L"},
+    {r:70, d:"Söndag 28 juni",   t:"01.30", h:"Colombia",                b:"Portugal",                 g:"Grupp K"},
+    {r:71, d:"Söndag 28 juni",   t:"01.30", h:"DR Kongo",                b:"Uzbekistan",               g:"Grupp K"},
+    {r:72, d:"Söndag 28 juni",   t:"04.00", h:"Algeriet",                b:"Österrike",                g:"Grupp J"},
+    {r:73, d:"Söndag 28 juni",   t:"04.00", h:"Jordanien",               b:"Argentina",                g:"Grupp J"},
+];
+
+function getState() {
+    return {
+        namn:  document.getElementById('fn').value,
+        alias: document.getElementById('fa').value,
+        email: document.getElementById('fe').value,
+        tips:  M.map((_, i) => [
+            document.getElementById('h'+i).value,
+            document.getElementById('a'+i).value
+        ])
+    };
+}
+
+function applyState(s) {
+    if (!s) return;
+    if (s.namn)  document.getElementById('fn').value = s.namn;
+    if (s.alias) document.getElementById('fa').value = s.alias;
+    if (s.email) document.getElementById('fe').value = s.email;
+    if (s.tips) s.tips.forEach(([h, a], i) => {
+        const he = document.getElementById('h'+i);
+        const ae = document.getElementById('a'+i);
+        if (he && h !== '' && h !== null) { he.value = h; he.classList.toggle('ok', true); }
+        if (ae && a !== '' && a !== null) { ae.value = a; ae.classList.toggle('ok', true); }
+    });
+    updateProg();
+}
+
+function save() {
+    try { localStorage.setItem('vmt26', JSON.stringify(getState())); } catch(e) {}
+    updateProg();
+}
+
+function updateProg() {
+    let n = 0;
+    M.forEach((_, i) => {
+        if (document.getElementById('h'+i)?.value !== '' &&
+            document.getElementById('a'+i)?.value !== '') n++;
+    });
+    document.getElementById('prog').textContent = n + ' / 72';
+}
+
+function enc(s) {
+    const b = btoa(unescape(encodeURIComponent(JSON.stringify(s))));
+    return b.replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+function dec(str) {
+    str = str.replace(/-/g,'+').replace(/_/g,'/');
+    while (str.length % 4) str += '=';
+    return JSON.parse(decodeURIComponent(escape(atob(str))));
+}
+
+function shareUrl() {
+    return location.origin + location.pathname + '#d=' + enc(getState());
+}
+
+function share() {
+    const url = shareUrl();
+    if (navigator.share) {
+        navigator.share({ title: 'Mina VM 2026-tips', url }).catch(() => showModal(url));
+    } else {
+        showModal(url);
+    }
+}
+
+function showModal(url) {
+    document.getElementById('ubox').value = url;
+    document.getElementById('modal').classList.add('on');
+}
+function closeModal() { document.getElementById('modal').classList.remove('on'); }
+
+function copyUrl() {
+    const v = document.getElementById('ubox').value;
+    (navigator.clipboard?.writeText(v) || Promise.reject())
+        .catch(() => { const b = document.getElementById('ubox'); b.select(); document.execCommand('copy'); })
+        .finally(() => { toast('Länken är kopierad!'); closeModal(); });
+}
+
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('on');
+    setTimeout(() => el.classList.remove('on'), 2500);
+}
+
+function dlXlsx() {
+    if (typeof XLSX === 'undefined') { toast('Laddar... försök igen om ett ögonblick'); return; }
+    const s = getState();
+    const wb = XLSX.utils.book_new();
+    const ws = { '!ref': 'A1:K73' };
+    const S = v => ({ v, t: 's' });
+    ws['A1']=S('Datum'); ws['B1']=S('Tid'); ws['C1']=S('Hemmalag'); ws['D1']=S('Bortalag');
+    ws['E1']=S('Grupp'); ws['G1']=S('Hemmamål'); ws['H1']=S('Bortamål');
+    ws['J1']=S('Namn');   ws['K1']=S(s.namn);
+    ws['J2']=S('Alias');  ws['K2']=S(s.alias);
+    ws['J3']=S('E-mail'); ws['K3']=S(s.email);
+    M.forEach((m, i) => {
+        const row = m.r;
+        if (i === 0 || M[i-1].d !== m.d) ws['A'+row] = S(m.d);
+        ws['B'+row]=S(m.t); ws['C'+row]=S(m.h); ws['D'+row]=S(m.b); ws['E'+row]=S(m.g);
+        const [hv, av] = s.tips[i];
+        if (hv !== '') ws['G'+row] = { v: parseInt(hv,10), t:'n' };
+        if (av !== '') ws['H'+row] = { v: parseInt(av,10), t:'n' };
+    });
+    XLSX.utils.book_append_sheet(wb, ws, 'Blad1');
+    const fn = (s.alias||s.namn||'tips').replace(/[^\wåäöÅÄÖ]/g,'_') + '_VM2026.xlsx';
+    XLSX.writeFile(wb, fn);
+    toast('Excel-filen laddas ner...');
+}
+
+function render() {
+    const el = document.getElementById('ml');
+    let grp = null, n = 0;
+    M.forEach((m, i) => {
+        if (m.g !== grp) {
+            grp = m.g;
+            const g = document.createElement('div');
+            g.className = 'gh'; g.textContent = m.g;
+            el.appendChild(g);
+        }
+        n++;
+        const d = document.createElement('div');
+        d.className = 'm';
+        d.innerHTML = `<div class="mn"><b>#${n}</b>${m.t}</div>
+            <div class="th">${m.h}</div>
+            <div class="sc">
+                <input class="gi" type="number" min="0" max="20" id="h${i}" placeholder="?">
+                <span class="dash">–</span>
+                <input class="gi" type="number" min="0" max="20" id="a${i}" placeholder="?">
+            </div>
+            <div class="ta">${m.b}</div>`;
+        el.appendChild(d);
+    });
+
+    M.forEach((_, i) => {
+        ['h','a'].forEach(p => {
+            const inp = document.getElementById(p+i);
+            inp.addEventListener('input', () => { inp.classList.toggle('ok', inp.value !== ''); save(); });
+        });
+    });
+
+    // Load from URL hash or localStorage
+    const hash = location.hash;
+    if (hash.startsWith('#d=')) {
+        try { applyState(dec(hash.slice(3))); return; } catch(e) {}
+    }
+    try { applyState(JSON.parse(localStorage.getItem('vmt26'))); } catch(e) {}
+}
+
+document.getElementById('modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
+
+render();
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
