@@ -370,10 +370,10 @@ function getState() {
         namn:  document.getElementById('fn').value,
         alias: document.getElementById('fa').value,
         email: document.getElementById('fe').value,
-        tips:  M.map((_, i) => [
-            document.getElementById('h'+i)?.value ?? '',
-            document.getElementById('a'+i)?.value ?? ''
-        ])
+        tips:  M.map((_, i) => ({
+            h: document.getElementById('h'+i)?.value ?? '',
+            a: document.getElementById('a'+i)?.value ?? ''
+        }))
     };
 }
 
@@ -382,7 +382,9 @@ function applyState(s) {
     if (s.namn)  document.getElementById('fn').value = s.namn;
     if (s.alias) document.getElementById('fa').value = s.alias;
     if (s.email) document.getElementById('fe').value = s.email;
-    if (s.tips) s.tips.forEach(([h, a], i) => {
+    if (s.tips) s.tips.forEach((t, i) => {
+        const h = typeof t === 'object' && !Array.isArray(t) ? t.h : t[0];
+        const a = typeof t === 'object' && !Array.isArray(t) ? t.a : t[1];
         const he = document.getElementById('h'+i);
         const ae = document.getElementById('a'+i);
         if (he && h !== '' && h != null) { he.value = h; he.classList.add('ok'); }
@@ -472,7 +474,9 @@ function dlXlsx() {
         const row = m.r;
         if (i === 0 || M[i-1].d !== m.d) ws['A'+row] = S(m.d);
         ws['B'+row]=S(m.t); ws['C'+row]=S(m.h); ws['D'+row]=S(m.b); ws['E'+row]=S(m.g);
-        const [hv, av] = s.tips[i];
+        const t = s.tips[i];
+        const hv = typeof t === 'object' && !Array.isArray(t) ? t.h : t[0];
+        const av = typeof t === 'object' && !Array.isArray(t) ? t.a : t[1];
         if (hv !== '') ws['G'+row] = { v: parseInt(hv,10), t:'n' };
         if (av !== '') ws['H'+row] = { v: parseInt(av,10), t:'n' };
     });
