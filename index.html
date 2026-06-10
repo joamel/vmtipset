@@ -107,42 +107,34 @@
     <header>
         <div class="hd">
             <span style="font-size:1.6rem;line-height:1">⚽</span>
-            <div><h1>VM 2026 Tipskupong</h1><div class="hs" id="admin-hs">Logga in</div></div>
+            <div><h1>VM 2026 Tipskupong</h1><div class="hs">Skapa och dela kuponger</div></div>
         </div>
         <button id="logout-btn" onclick="logout()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:.8rem;cursor:pointer">Logga ut</button>
     </header>
 
-    <!-- Inloggning -->
-    <div id="login-view" class="wrap">
-        <div class="card">
-            <div class="ct" id="login-title">Admin</div>
-            <div class="fi"><label id="pw-label">Lösenord</label>
-                <input type="password" id="pw-input" placeholder="Ange lösenord" onkeydown="if(event.key==='Enter')tryLogin()">
-            </div>
-            <div id="pw-err">Fel lösenord – försök igen</div>
-            <button class="create-btn" id="pw-btn" onclick="tryLogin()">Logga in</button>
+    <div class="wrap">
+        <div id="fb-notice" class="notice" style="display:none">
+            Firebase är inte konfigurerat — kuponger sparas bara lokalt på din enhet.
         </div>
-    </div>
-
-    <!-- Admin-innehåll (dolt tills inloggad) -->
-    <div id="admin-content" style="display:none">
-        <div class="wrap">
-            <div id="fb-notice" class="notice" style="display:none">
-                Firebase är inte konfigurerat — kuponger sparas bara lokalt på din enhet.
+        <div class="card">
+            <div class="ct">Skapa ny kupong</div>
+            <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Pappa"></div>
+            <button class="create-btn" onclick="createLink()">Skapa länk</button>
+            <div id="created-result"></div>
+        </div>
+        <div class="card" id="links-card">
+            <div class="ct" style="display:flex;justify-content:space-between;align-items:center">
+                <span>Alla kuponger</span>
+                <button id="logout-btn2" onclick="logout()" style="display:none;background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;color:#555">Logga ut</button>
             </div>
-            <div class="card">
-                <div class="ct">Skapa ny kupong</div>
-                <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Pappa"></div>
-                <button class="create-btn" onclick="createLink()">Skapa länk</button>
-                <div id="created-result"></div>
-            </div>
-            <div class="card" id="links-card" style="display:none">
-                <div class="ct" style="display:flex;justify-content:space-between;align-items:center">
-                    <span>Skapade kuponger</span>
-                    <button style="background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;color:#555" onclick="copyText(location.origin+location.pathname)">Kopiera adminlänk</button>
+            <div id="pw-section">
+                <div class="fi" style="margin-bottom:8px">
+                    <input type="password" id="pw-input" placeholder="Adminlösenord" onkeydown="if(event.key==='Enter')tryLogin()">
                 </div>
-                <div id="links-list"></div>
+                <div id="pw-err">Fel lösenord – försök igen</div>
+                <button class="create-btn" id="pw-btn" onclick="tryLogin()" style="margin-top:0">Lås upp</button>
             </div>
+            <div id="links-list" style="display:none"></div>
         </div>
     </div>
 </div>
@@ -312,12 +304,11 @@ async function initAdmin() {
 }
 
 async function checkFirstRun() {
-    if (!db) { showAdminContent(); return; }
+    if (!db) return;
     try {
         const snap = await db.collection('meta').doc('config').get();
         if (!snap.exists || !snap.data().adminPassword) {
-            document.getElementById('login-title').textContent = 'Välj adminlösenord';
-            document.getElementById('pw-label').textContent = 'Välj ett lösenord';
+            document.getElementById('pw-input').placeholder = 'Välj ett adminlösenord';
             document.getElementById('pw-btn').textContent = 'Spara lösenord';
             document.getElementById('pw-btn').onclick = savePassword;
         }
@@ -351,10 +342,10 @@ async function savePassword() {
 }
 
 function showAdminContent() {
-    document.getElementById('login-view').style.display = 'none';
-    document.getElementById('admin-content').style.display = 'block';
-    document.getElementById('admin-hs').textContent = 'Skapa och hantera kuponger';
+    document.getElementById('pw-section').style.display = 'none';
+    document.getElementById('links-list').style.display = 'block';
     document.getElementById('logout-btn').style.display = 'block';
+    document.getElementById('logout-btn2').style.display = 'block';
     if (!db) document.getElementById('fb-notice').style.display = 'block';
     startAdminListener();
 }
@@ -428,16 +419,15 @@ async function createLink() {
 }
 
 function renderLinksFromData(links) {
-    if (!links.length) { document.getElementById('links-card').style.display = 'none'; return; }
-    document.getElementById('links-card').style.display = 'block';
     const el = document.getElementById('links-list');
+    if (!links.length) { el.innerHTML = '<p style="color:#888;font-size:.9rem">Inga kuponger ännu.</p>'; return; }
     el.innerHTML = links.map(l => {
         const url = location.origin + location.pathname + '?k=' + l.id;
         const date = l.createdAt ? new Date(l.createdAt).toLocaleDateString('sv-SE') : '';
-        const lock = l.klar ? ' 🔒' : '';
+        const check = l.klar ? ' <span style="color:#22a349;font-size:1rem">✓</span>' : '';
         return `<div class="link-row">
             <div class="link-info">
-                <div class="link-name">${l.name || 'Namnlös kupong'}${lock}</div>
+                <div class="link-name">${l.name || 'Namnlös kupong'}${check}</div>
                 <div class="link-date">Skapad ${date}</div>
             </div>
             <div class="link-actions">
@@ -456,9 +446,8 @@ async function deleteKupong(id, name) {
 
 function renderLinksList() {
     const links = JSON.parse(localStorage.getItem('vmt26_links') || '[]');
-    if (!links.length) { document.getElementById('links-card').style.display = 'none'; return; }
-    document.getElementById('links-card').style.display = 'block';
     const el = document.getElementById('links-list');
+    if (!links.length) { el.innerHTML = '<p style="color:#888;font-size:.9rem">Inga kuponger ännu.</p>'; return; }
     el.innerHTML = [...links].reverse().map(l => {
         const url = location.origin + location.pathname + '?k=' + l.id;
         const date = new Date(l.createdAt).toLocaleDateString('sv-SE');
@@ -478,7 +467,7 @@ function renderLinksList() {
         [...links].forEach(l => {
             db.collection('kuponger').doc(l.id).onSnapshot(snap => {
                 const lockEl = document.getElementById('lock-' + l.id);
-                if (lockEl) lockEl.textContent = snap.exists && snap.data()?.klar ? ' 🔒' : '';
+                if (lockEl) lockEl.innerHTML = snap.exists && snap.data()?.klar ? ' <span style="color:#22a349;font-size:1rem">✓</span>' : '';
             });
         });
     }
@@ -508,8 +497,9 @@ function toggleKlar() {
 function updateKlarBtn() {
     const btn = document.getElementById('klar-btn');
     if (!btn) return;
-    btn.textContent = klarStatus ? '🔒 Klar' : 'Markera som klar';
-    btn.style.background = klarStatus ? '#555' : '';
+    btn.textContent = klarStatus ? '✓ Klar' : 'Markera som klar';
+    btn.style.color = klarStatus ? '#fff' : '';
+    btn.style.background = klarStatus ? '#22a349' : '';
     const locked = klarStatus;
     document.querySelectorAll('#fn,#fa,#fe,.gi').forEach(el => {
         el.disabled = locked;
