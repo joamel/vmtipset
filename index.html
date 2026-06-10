@@ -151,7 +151,8 @@
         </div>
     </div>
     <div id="bar">
-        <button class="btn bd" onclick="dlXlsx()">Ladda ner VM-kupong</button>
+        <button id="klar-btn" class="btn bd" onclick="toggleKlar()">Markera som klar</button>
+        <button class="btn bs" onclick="dlXlsx()">Ladda ner VM-kupong</button>
     </div>
 </div>
 
@@ -326,7 +327,7 @@ function renderLinksList() {
         const date = new Date(l.createdAt).toLocaleDateString('sv-SE');
         return `<div class="link-row">
             <div class="link-info">
-                <div class="link-name">${l.name || 'Namnlös kupong'}</div>
+                <div class="link-name">${l.name || 'Namnlös kupong'} <span id="lock-${l.id}"></span></div>
                 <div class="link-date">Skapad ${date}</div>
             </div>
             <div class="link-actions">
@@ -335,6 +336,15 @@ function renderLinksList() {
             </div>
         </div>`;
     }).join('');
+
+    if (db) {
+        [...links].forEach(l => {
+            db.collection('kuponger').doc(l.id).onSnapshot(snap => {
+                const lockEl = document.getElementById('lock-' + l.id);
+                if (lockEl) lockEl.textContent = snap.exists && snap.data()?.klar ? ' 🔒' : '';
+            });
+        });
+    }
 }
 
 function copyText(text) {
@@ -350,6 +360,20 @@ function doShare(url, name) {
 // ─── PARTICIPANT ──────────────────────────────────────────────────────────────
 
 let saveTimer = null;
+let klarStatus = false;
+
+function toggleKlar() {
+    klarStatus = !klarStatus;
+    updateKlarBtn();
+    if (db) db.collection('kuponger').doc(kupongId).update({ klar: klarStatus }).catch(() => {});
+}
+
+function updateKlarBtn() {
+    const btn = document.getElementById('klar-btn');
+    if (!btn) return;
+    btn.textContent = klarStatus ? '🔒 Klar!' : 'Markera som klar';
+    btn.style.background = klarStatus ? '#555' : '';
+}
 
 function initParticipant() {
     render();
@@ -393,6 +417,7 @@ function applyState(s) {
         if (he && h !== '' && h != null) { he.value = h; he.classList.add('ok'); }
         if (ae && a !== '' && a != null) { ae.value = a; ae.classList.add('ok'); }
     });
+    if (s.klar !== undefined) { klarStatus = !!s.klar; updateKlarBtn(); }
     updateProg();
 }
 
