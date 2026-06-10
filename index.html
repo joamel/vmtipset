@@ -357,7 +357,7 @@ function initParticipant() {
         db.collection('kuponger').doc(kupongId)
             .onSnapshot({ includeMetadataChanges: true }, snap => {
                 if (snap.metadata.hasPendingWrites) return;
-                if (snap.exists()) applyState(snap.data());
+                if (snap.exists) applyState(snap.data());
             }, () => {
                 try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
             });
