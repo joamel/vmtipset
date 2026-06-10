@@ -371,8 +371,13 @@ function toggleKlar() {
 function updateKlarBtn() {
     const btn = document.getElementById('klar-btn');
     if (!btn) return;
-    btn.textContent = klarStatus ? '🔒 Klar!' : 'Markera som klar';
+    btn.textContent = klarStatus ? '🔒 Klar' : 'Markera som klar';
     btn.style.background = klarStatus ? '#555' : '';
+    const locked = klarStatus;
+    document.querySelectorAll('#fn,#fa,#fe,.gi').forEach(el => {
+        el.disabled = locked;
+        el.style.opacity = locked ? '0.5' : '';
+    });
 }
 
 function initParticipant() {
