@@ -129,7 +129,7 @@
             </div>
             <div id="pw-section">
                 <div class="fi" style="margin-bottom:8px">
-                    <input type="password" id="pw-input" placeholder="Adminlösenord" onkeydown="if(event.key==='Enter')tryLogin()">
+                    <input type="password" id="pw-input" placeholder="Adminlösenord" autocomplete="current-password" onkeydown="if(event.key==='Enter')tryLogin()">
                 </div>
                 <div id="pw-err">Fel lösenord – försök igen</div>
                 <button class="create-btn" id="pw-btn" onclick="tryLogin()" style="margin-top:0">Lås upp</button>
@@ -413,9 +413,10 @@ async function createLink() {
 
     const nameLabel = name ? ` för ${name}` : '';
     document.getElementById('created-result').innerHTML = `
-        <div class="created-box">
+        <div class="created-box" style="position:relative">
+            <button onclick="document.getElementById('created-result').innerHTML=''" style="position:absolute;top:6px;right:6px;background:none;border:none;font-size:1rem;cursor:pointer;color:#888;line-height:1">✕</button>
             <div class="cl">✓ Kupong skapad${nameLabel}</div>
-            <div class="cu">${url}</div>
+            <a class="cu" href="${url}" style="display:block;word-break:break-all">${url}</a>
             <div class="ub">
                 <button class="bcp" onclick="copyText('${url}')">Kopiera länk</button>
                 ${navigator.share ? `<button class="bsh" onclick="doShare('${url}','${name}')">Dela</button>` : ''}
