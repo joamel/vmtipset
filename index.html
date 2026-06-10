@@ -410,6 +410,7 @@ async function createLink() {
             <div class="cu">${url}</div>
             <div class="ub">
                 <button class="bcp" onclick="copyText('${url}')">Kopiera länk</button>
+                <a class="la-open" href="${url}" style="text-decoration:none">Öppna</a>
                 ${navigator.share ? `<button class="bsh" onclick="doShare('${url}','${name}')">Dela</button>` : ''}
             </div>
         </div>`;
