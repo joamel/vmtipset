@@ -351,14 +351,17 @@ function doShare(url, name) {
 
 let saveTimer = null;
 
-async function initParticipant() {
+function initParticipant() {
     render();
     if (db) {
-        try {
-            const snap = await db.collection('kuponger').doc(kupongId).get();
-            if (snap.exists()) applyState(snap.data());
-            return;
-        } catch(e) {}
+        db.collection('kuponger').doc(kupongId)
+            .onSnapshot({ includeMetadataChanges: true }, snap => {
+                if (snap.metadata.hasPendingWrites) return;
+                if (snap.exists()) applyState(snap.data());
+            }, () => {
+                try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
+            });
+        return;
     }
     try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
 }
