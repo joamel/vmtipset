@@ -442,7 +442,7 @@ function renderLinksFromData(links) {
             <div class="link-actions">
                 <button class="la-cp" onclick="copyText('${url}')">Kopiera</button>
                 <a class="la-open" href="${url}">Öppna</a>
-                <button class="la-del" onclick="deleteKupong('${l.id}','${l.name}')">✕</button>
+                <button class="la-del" ${l.klar ? 'disabled title="Avmarkera klar för att ta bort"' : `onclick="deleteKupong('${l.id}','${l.name}')"`} style="${l.klar ? 'opacity:.3;cursor:not-allowed' : ''}">✕</button>
             </div>
         </div>`;
     }).join('');
