@@ -283,18 +283,18 @@ if (kupongId) {
 
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
 
-async function initAdmin() {
+function initAdmin() {
     if (db) {
-        try {
-            const snap = await db.collection('meta').doc('links').get();
-            if (snap.exists) {
-                const fbLinks = snap.data().list || [];
-                const local = JSON.parse(localStorage.getItem('vmt26_links') || '[]');
-                const seen = new Set();
-                const merged = [...fbLinks, ...local].filter(l => seen.has(l.id) ? false : seen.add(l.id));
-                localStorage.setItem('vmt26_links', JSON.stringify(merged));
-            }
-        } catch(e) {}
+        db.collection('kuponger').onSnapshot(snapshot => {
+            const docs = snapshot.docs.map(d => ({
+                id: d.id,
+                name: d.data().label || d.data().namn || '',
+                createdAt: d.data().createdAt || '',
+                klar: !!d.data().klar
+            })).sort((a, b) => a.createdAt < b.createdAt ? 1 : -1);
+            renderLinksFromData(docs);
+        });
+        return;
     }
     renderLinksList();
 }
@@ -311,7 +311,7 @@ async function createLink() {
     if (db) {
         try {
             await db.collection('kuponger').doc(id).set({
-                namn: name, alias: '', email: '', tips: [],
+                label: name, namn: name, alias: '', email: '', tips: [],
                 createdAt: new Date().toISOString()
             });
         } catch(e) {}
@@ -344,6 +344,27 @@ async function createLink() {
 
     document.getElementById('new-name').value = '';
     renderLinksList();
+}
+
+function renderLinksFromData(links) {
+    if (!links.length) { document.getElementById('links-card').style.display = 'none'; return; }
+    document.getElementById('links-card').style.display = 'block';
+    const el = document.getElementById('links-list');
+    el.innerHTML = links.map(l => {
+        const url = location.origin + location.pathname + '?k=' + l.id;
+        const date = l.createdAt ? new Date(l.createdAt).toLocaleDateString('sv-SE') : '';
+        const lock = l.klar ? ' 🔒' : '';
+        return `<div class="link-row">
+            <div class="link-info">
+                <div class="link-name">${l.name || 'Namnlös kupong'}${lock}</div>
+                <div class="link-date">Skapad ${date}</div>
+            </div>
+            <div class="link-actions">
+                <button class="la-cp" onclick="copyText('${url}')">Kopiera</button>
+                <a class="la-open" href="${url}">Öppna</a>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 function renderLinksList() {
