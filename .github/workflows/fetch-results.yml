@@ -1,0 +1,24 @@
+name: Hämta matchresultat
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # varje hel timme
+  workflow_dispatch:        # möjlighet att köra manuellt från GitHub
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Installera beroenden
+        run: npm install
+        working-directory: scripts
+      - name: Hämta och spara resultat
+        run: node fetch-results.js
+        working-directory: scripts
+        env:
+          FD_API_KEY: ${{ secrets.FD_API_KEY }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
