@@ -430,9 +430,13 @@ async function fetchResults() {
     st.textContent = 'Hämtar...';
     try {
         if (db) await db.collection('meta').doc('config').set({ fdApiKey: key }, { merge: true });
-        const resp = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
+        const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches';
+        let resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl), {
             headers: { 'X-Auth-Token': key }
         });
+        if (!resp.ok && resp.status === 0) {
+            resp = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl + '?X-Auth-Token=' + key));
+        }
         if (!resp.ok) {
             st.textContent = 'API-fel ' + resp.status + (resp.status === 403 ? ' — kontrollera API-nyckeln' : '');
             return;
