@@ -35,8 +35,12 @@
 
         .gh { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #b06500; padding: 11px 0 3px; border-top: 1px solid #eee; margin-top: 2px; }
         .gh:first-child { border-top: none; padding-top: 0; }
-        .m { display: grid; grid-template-columns: 40px 1fr auto 1fr; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #f2f2f2; }
+        .m { display: grid; grid-template-columns: 40px 1fr auto 1fr; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #f2f2f2; border-left: 3px solid transparent; padding-left: 4px; transition: border-color .2s, background .2s; }
         .m:last-child { border-bottom: none; }
+        .m-x { border-left-color: #22a349; background: #f3fbf5; }
+        .m-ok { border-left-color: #8bc34a; background: #f8fbf3; }
+        .m-ng { border-left-color: #ef5350; background: #fff5f5; }
+        .mres { display: block; font-size: .62rem; color: #888; font-weight: 700; letter-spacing: .02em; margin-top: 1px; }
         .mn { font-size: .68rem; color: #aaa; line-height: 1.4; text-align: center; }
         .mn b { color: #003087; display: block; font-size: .76rem; }
         .th { text-align: right; font-size: .87rem; }
@@ -139,6 +143,15 @@
                 </form>
             </div>
             <div id="links-list" style="display:none"></div>
+        </div>
+        <div class="card" id="results-card" style="display:none">
+            <div class="ct">Automatisk rättning</div>
+            <p style="font-size:.85rem;color:#666;margin:0 0 10px">Hämtar resultat från football-data.org och rättar alla kuponger live. <a href="https://www.football-data.org/client/register" target="_blank" style="color:#003087">Skaffa gratis API-nyckel</a></p>
+            <form autocomplete="off" onsubmit="fetchResults();return false">
+                <div class="fi"><label>API-nyckel</label><input type="text" id="fd-key" autocomplete="off" placeholder="Klistra in din API-nyckel"></div>
+                <button class="create-btn" type="submit">Hämta resultat nu</button>
+            </form>
+            <div id="fetch-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
         </div>
     </div>
 </div>
@@ -285,6 +298,71 @@ const M = [
     {r:73, d:"Söndag 28 juni",   t:"04.00", h:"Jordanien",               b:"Argentina",                g:"Grupp J"},
 ];
 
+// ─── RESULTAT ────────────────────────────────────────────────────────────────
+let RESULTS = [];
+
+const TEAM_EN = {
+    'mexiko':['mexico'],'sydafrika':['south africa'],'sydkorea':['korea republic','south korea'],
+    'tjeckien':['czechia','czech republic'],'kanada':['canada'],
+    'bosnien och hercegovina':['bosnia and herzegovina','bosnia-herzegovina','bosnia & herzegovina'],
+    'usa':['united states','usa'],'paraguay':['paraguay'],'qatar':['qatar'],
+    'schweiz':['switzerland'],'brasilien':['brazil'],'marocko':['morocco'],
+    'haiti':['haiti'],'skottland':['scotland'],'australien':['australia'],
+    'turkiet':['türkiye','turkey'],'tyskland':['germany'],'curaçao':['curaçao','curacao'],
+    'nederländerna':['netherlands'],'japan':['japan'],
+    "elfenbenskusten":["côte d'ivoire","ivory coast","cote d'ivoire"],
+    'ecuador':['ecuador'],'sverige':['sweden'],'tunisien':['tunisia'],
+    'spanien':['spain'],'kap verde':['cape verde','cabo verde'],
+    'belgien':['belgium'],'egypten':['egypt'],'saudiarabien':['saudi arabia'],
+    'uruguay':['uruguay'],'iran':['iran'],'nya zeeland':['new zealand'],
+    'frankrike':['france'],'senegal':['senegal'],'irak':['iraq'],
+    'norge':['norway'],'argentina':['argentina'],'algeriet':['algeria'],
+    'österrike':['austria'],'jordanien':['jordan'],'portugal':['portugal'],
+    'dr kongo':['dr congo','congo dr','democratic republic of congo'],
+    'england':['england'],'kroatien':['croatia'],'ghana':['ghana'],
+    'panama':['panama'],'uzbekistan':['uzbekistan'],'colombia':['colombia'],
+};
+
+function normStr(s) { return s.toLowerCase().replace(/[^a-z]/g, ''); }
+
+function teamMatches(apiName, swe) {
+    const aliases = TEAM_EN[swe.toLowerCase()];
+    if (!aliases) return false;
+    return aliases.some(a => normStr(a) === normStr(apiName));
+}
+
+function outcome(h, a) { return h > a ? 'H' : a > h ? 'A' : 'D'; }
+
+function mapApiToResults(apiMatches) {
+    const res = new Array(M.length).fill(null);
+    apiMatches.forEach(am => {
+        const idx = M.findIndex(m => teamMatches(am.homeTeam.name, m.h) && teamMatches(am.awayTeam.name, m.b));
+        if (idx === -1) return;
+        res[idx] = { h: am.score.fullTime.home, a: am.score.fullTime.away, status: am.status };
+    });
+    return res;
+}
+
+function updateMatchColors() {
+    RESULTS.forEach((res, i) => {
+        const row = document.getElementById('mr' + i);
+        const resEl = document.getElementById('res' + i);
+        if (!row) return;
+        row.classList.remove('m-x', 'm-ok', 'm-ng');
+        if (!res || res.status !== 'FINISHED' || res.h == null) {
+            if (resEl) resEl.textContent = '';
+            return;
+        }
+        if (resEl) resEl.textContent = res.h + '–' + res.a;
+        const tipH = parseInt(document.getElementById('h' + i)?.value);
+        const tipA = parseInt(document.getElementById('a' + i)?.value);
+        if (isNaN(tipH) || isNaN(tipA)) return;
+        if (tipH === res.h && tipA === res.a) row.classList.add('m-x');
+        else if (outcome(tipH, tipA) === outcome(res.h, res.a)) row.classList.add('m-ok');
+        else row.classList.add('m-ng');
+    });
+}
+
 // ─── ROUTING ─────────────────────────────────────────────────────────────────
 const kupongId = new URLSearchParams(location.search).get('k');
 
@@ -345,13 +423,54 @@ async function savePassword() {
     } catch(e) {}
 }
 
-function showAdminContent() {
+async function fetchResults() {
+    const key = document.getElementById('fd-key').value.trim();
+    const st = document.getElementById('fetch-st');
+    if (!key) { st.textContent = 'Ange en API-nyckel'; return; }
+    st.textContent = 'Hämtar...';
+    try {
+        if (db) await db.collection('meta').doc('config').set({ fdApiKey: key }, { merge: true });
+        const resp = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
+            headers: { 'X-Auth-Token': key }
+        });
+        if (!resp.ok) {
+            st.textContent = 'API-fel ' + resp.status + (resp.status === 403 ? ' — kontrollera API-nyckeln' : '');
+            return;
+        }
+        const data = await resp.json();
+        const results = mapApiToResults(data.matches || []);
+        const updatedAt = new Date().toISOString();
+        if (db) await db.collection('meta').doc('results').set({ results, updatedAt });
+        RESULTS = results;
+        const n = results.filter(r => r && r.status === 'FINISHED').length;
+        const unmatched = (data.matches || []).filter(am =>
+            !M.some(m => teamMatches(am.homeTeam.name, m.h) && teamMatches(am.awayTeam.name, m.b))
+        ).map(am => am.homeTeam.name + ' v ' + am.awayTeam.name);
+        st.textContent = `✓ ${n} avslutade matcher hämtade` + (unmatched.length ? ` | Omatchade: ${unmatched.join(', ')}` : '');
+    } catch(e) {
+        st.textContent = 'Fel: ' + (e.message || e);
+    }
+}
+
+async function showAdminContent() {
     document.getElementById('pw-section').style.display = 'none';
     document.getElementById('links-list').style.display = 'block';
     document.getElementById('logout-btn').style.display = 'block';
     document.getElementById('logout-btn2').style.display = 'block';
     document.getElementById('create-btn').textContent = 'Skapa länk';
-    if (!db) document.getElementById('fb-notice').style.display = 'block';
+    document.getElementById('results-card').style.display = 'block';
+    if (!db) { document.getElementById('fb-notice').style.display = 'block'; return; }
+    try {
+        const snap = await db.collection('meta').doc('config').get();
+        if (snap.exists && snap.data().fdApiKey) {
+            document.getElementById('fd-key').value = snap.data().fdApiKey;
+            const rsnap = await db.collection('meta').doc('results').get();
+            if (rsnap.exists && rsnap.data().updatedAt) {
+                const d = new Date(rsnap.data().updatedAt).toLocaleString('sv-SE');
+                document.getElementById('fetch-st').textContent = 'Senast hämtat: ' + d;
+            }
+        }
+    } catch(e) {}
     startAdminListener();
 }
 
@@ -530,6 +649,9 @@ function initParticipant() {
             }, () => {
                 try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
             });
+        db.collection('meta').doc('results').onSnapshot(snap => {
+            if (snap.exists) { RESULTS = snap.data().results || []; updateMatchColors(); }
+        });
         return;
     }
     try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
@@ -564,6 +686,7 @@ function applyState(s) {
     });
     if (s.klar !== undefined) { klarStatus = !!s.klar; updateKlarBtn(); }
     updateProg();
+    updateMatchColors();
 }
 
 function save() {
@@ -612,7 +735,8 @@ function render() {
         n++;
         const d = document.createElement('div');
         d.className = 'm';
-        d.innerHTML = `<div class="mn"><b>#${n}</b>${m.t}</div>
+        d.id = 'mr' + i;
+        d.innerHTML = `<div class="mn"><b>#${n}</b>${m.t}<span class="mres" id="res${i}"></span></div>
             <div class="th">${m.h}</div>
             <div class="sc">
                 <input class="gi" type="number" min="0" max="20" id="h${i}" placeholder="?">
