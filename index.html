@@ -37,10 +37,12 @@
         .gh:first-child { border-top: none; padding-top: 0; }
         .m { display: grid; grid-template-columns: 40px 1fr auto 1fr; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #f2f2f2; border-left: 3px solid transparent; padding-left: 4px; transition: border-color .2s, background .2s; }
         .m:last-child { border-bottom: none; }
-        .m-x { border-left-color: #1976d2; background: #f0f6ff; }
-        .gi-x { border-color: #22a349 !important; background: #d4f5de !important; box-shadow: 0 0 0 3px rgba(34,163,73,.25); }
-        .m-ok { border-left-color: #22a349; background: #f3fbf5; }
-        .m-ng { border-left-color: #ef5350; background: #fff5f5; }
+        .m-x  { background: #e8f7ed; }
+        .m-ok { background: #e8f7ed; }
+        .m-ng { background: #fdecea; }
+        .gi-x  { border-color: #1976d2 !important; box-shadow: 0 0 0 3px rgba(25,118,210,.3); }
+        .gi-ok { border-color: #22a349 !important; box-shadow: 0 0 0 3px rgba(34,163,73,.25); }
+        .gi-ng { border-color: #ef5350 !important; box-shadow: 0 0 0 3px rgba(239,83,80,.2); }
         .mres { display: block; font-size: .62rem; color: #888; font-weight: 700; letter-spacing: .02em; margin-top: 1px; }
         .mn { font-size: .68rem; color: #aaa; line-height: 1.4; text-align: center; }
         .mn b { color: #003087; display: block; font-size: .76rem; }
@@ -353,8 +355,8 @@ function updateMatchColors() {
         row.classList.remove('m-x', 'm-ok', 'm-ng');
         const hEl = document.getElementById('h' + i);
         const aEl = document.getElementById('a' + i);
-        if (hEl) hEl.classList.remove('gi-x');
-        if (aEl) aEl.classList.remove('gi-x');
+        if (hEl) hEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
+        if (aEl) aEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
         if (!res || res.status !== 'FINISHED' || res.h == null) {
             if (resEl) resEl.textContent = '';
             return;
@@ -363,12 +365,21 @@ function updateMatchColors() {
         const tipH = parseInt(hEl?.value);
         const tipA = parseInt(aEl?.value);
         if (isNaN(tipH) || isNaN(tipA)) return;
-        if (tipH === res.h && tipA === res.a) {
+        const exact = tipH === res.h && tipA === res.a;
+        const correct = outcome(tipH, tipA) === outcome(res.h, res.a);
+        if (exact) {
             row.classList.add('m-x');
             if (hEl) hEl.classList.add('gi-x');
             if (aEl) aEl.classList.add('gi-x');
-        } else if (outcome(tipH, tipA) === outcome(res.h, res.a)) row.classList.add('m-ok');
-        else row.classList.add('m-ng');
+        } else if (correct) {
+            row.classList.add('m-ok');
+            if (hEl) hEl.classList.add('gi-ok');
+            if (aEl) aEl.classList.add('gi-ok');
+        } else {
+            row.classList.add('m-ng');
+            if (hEl) hEl.classList.add('gi-ng');
+            if (aEl) aEl.classList.add('gi-ng');
+        }
     });
 }
 
