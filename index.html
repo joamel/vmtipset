@@ -424,11 +424,11 @@ async function savePassword() {
     } catch(e) {}
 }
 
-async function fetchResults() {
+async function fetchResults(silent = false) {
     const key = document.getElementById('fd-key').value.trim();
     const st = document.getElementById('fetch-st');
-    if (!key) { st.textContent = 'Ange en API-nyckel'; return; }
-    st.textContent = 'Hämtar...';
+    if (!key) { if (!silent) st.textContent = 'Ange en API-nyckel'; return; }
+    if (!silent) st.textContent = 'Hämtar...';
     try {
         if (db) await db.collection('meta').doc('config').set({ fdApiKey: key }, { merge: true });
         const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches';
@@ -451,7 +451,8 @@ async function fetchResults() {
         const unmatched = (data.matches || []).filter(am =>
             !M.some(m => teamMatches(am.homeTeam.name, m.h) && teamMatches(am.awayTeam.name, m.b))
         ).map(am => am.homeTeam.name + ' v ' + am.awayTeam.name);
-        st.textContent = `✓ ${n} avslutade matcher hämtade` + (unmatched.length ? ` | Omatchade: ${unmatched.join(', ')}` : '');
+        const nextTime = new Date(Date.now() + AUTO_FETCH_INTERVAL).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'});
+        st.textContent = `✓ ${n} avslutade matcher — nästa auto-hämtning ${nextTime}` + (unmatched.length ? ` | Omatchade: ${unmatched.join(', ')}` : '');
     } catch(e) {
         st.textContent = 'Fel: ' + (e.message || e);
     }
@@ -474,12 +475,24 @@ async function showAdminContent() {
                 const d = new Date(rsnap.data().updatedAt).toLocaleString('sv-SE');
                 document.getElementById('fetch-st').textContent = 'Senast hämtat: ' + d;
             }
+            startAutoFetch();
         }
     } catch(e) {}
     startAdminListener();
 }
 
+let autoFetchTimer = null;
+const AUTO_FETCH_INTERVAL = 15 * 60 * 1000;
+
+function startAutoFetch() {
+    if (autoFetchTimer) return;
+    autoFetchTimer = setInterval(() => {
+        if (document.getElementById('fd-key')?.value.trim()) fetchResults(true);
+    }, AUTO_FETCH_INTERVAL);
+}
+
 function logout() {
+    clearInterval(autoFetchTimer);
     sessionStorage.removeItem('adminAuth');
     location.reload();
 }
