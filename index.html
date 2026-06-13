@@ -326,6 +326,7 @@ const TEAM_EN = {
 function normStr(s) { return s.toLowerCase().replace(/[^a-z]/g, ''); }
 
 function teamMatches(apiName, swe) {
+    if (!apiName || !swe) return false;
     const aliases = TEAM_EN[swe.toLowerCase()];
     if (!aliases) return false;
     return aliases.some(a => normStr(a) === normStr(apiName));
