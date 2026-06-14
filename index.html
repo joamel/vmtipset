@@ -453,6 +453,18 @@ async function savePassword() {
     } catch(e) {}
 }
 
+async function fetchAndStore(key) {
+    const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches';
+    const resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl), {
+        headers: { 'X-Auth-Token': key }
+    });
+    if (!resp.ok) throw new Error('API-fel ' + resp.status + (resp.status === 403 ? ' — kontrollera API-nyckeln' : ''));
+    const data = await resp.json();
+    const results = mapApiToResults(data.matches || []);
+    if (db) await db.collection('meta').doc('results').set({ results, updatedAt: new Date().toISOString() });
+    return { results, matches: data.matches || [] };
+}
+
 async function fetchResults(silent = false) {
     const key = document.getElementById('fd-key').value.trim();
     const st = document.getElementById('fetch-st');
@@ -460,30 +472,32 @@ async function fetchResults(silent = false) {
     if (!silent) st.textContent = 'Hämtar...';
     try {
         if (db) await db.collection('meta').doc('config').set({ fdApiKey: key }, { merge: true });
-        const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches';
-        let resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl), {
-            headers: { 'X-Auth-Token': key }
-        });
-        if (!resp.ok && resp.status === 0) {
-            resp = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl + '?X-Auth-Token=' + key));
-        }
-        if (!resp.ok) {
-            st.textContent = 'API-fel ' + resp.status + (resp.status === 403 ? ' — kontrollera API-nyckeln' : '');
-            return;
-        }
-        const data = await resp.json();
-        const results = mapApiToResults(data.matches || []);
-        const updatedAt = new Date().toISOString();
-        if (db) await db.collection('meta').doc('results').set({ results, updatedAt });
+        const { results, matches } = await fetchAndStore(key);
         RESULTS = results;
         const n = results.filter(r => r && r.status === 'FINISHED').length;
-        const unmatched = (data.matches || []).filter(am =>
-            !M.some(m => teamMatches(am.homeTeam.name, m.h) && teamMatches(am.awayTeam.name, m.b))
-        ).map(am => am.homeTeam.name + ' v ' + am.awayTeam.name);
+        const unmatched = matches.filter(am =>
+            !M.some(m => teamMatches(am.homeTeam?.name, m.h) && teamMatches(am.awayTeam?.name, m.b))
+        ).map(am => (am.homeTeam?.name || '?') + ' v ' + (am.awayTeam?.name || '?'));
         st.textContent = `✓ ${n} avslutade matcher` + (unmatched.length ? ` | Omatchade: ${unmatched.join(', ')}` : '');
     } catch(e) {
-        st.textContent = 'Fel: ' + (e.message || e);
+        if (!silent) st.textContent = 'Fel: ' + (e.message || e);
     }
+}
+
+async function startResultsRefresh() {
+    if (!db) return;
+    try {
+        const snap = await db.collection('meta').doc('config').get();
+        const key = snap.exists && snap.data().fdApiKey;
+        if (!key) return;
+        setInterval(async () => {
+            try {
+                const rsnap = await db.collection('meta').doc('results').get();
+                const age = rsnap.exists ? Date.now() - new Date(rsnap.data().updatedAt).getTime() : Infinity;
+                if (age > 50000) await fetchAndStore(key);
+            } catch(e) {}
+        }, 60000);
+    } catch(e) {}
 }
 
 async function showAdminContent() {
@@ -698,6 +712,7 @@ function initParticipant() {
         db.collection('meta').doc('results').onSnapshot(snap => {
             if (snap.exists) { RESULTS = snap.data().results || []; updateMatchColors(); }
         });
+        startResultsRefresh();
         return;
     }
     try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
