@@ -44,6 +44,9 @@
         .gi-ok { color: #22a349 !important; background: #f8f8f8 !important; }
         .gi-ng { color: #e53935 !important; background: #f8f8f8 !important; }
         .mres { display: block; font-size: .62rem; color: #888; font-weight: 700; letter-spacing: .02em; margin-top: 1px; }
+        .mres-live { color: #e53935; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        .live-dot { display: inline-block; width: 6px; height: 6px; background: #e53935; border-radius: 50%; margin-right: 2px; animation: pulse 1.2s ease-in-out infinite; vertical-align: middle; }
         .mn { font-size: .68rem; color: #aaa; line-height: 1.4; text-align: center; }
         .mn b { color: #003087; display: block; font-size: .76rem; }
         .th { text-align: right; font-size: .87rem; }
@@ -357,10 +360,17 @@ function updateMatchColors() {
         const aEl = document.getElementById('a' + i);
         if (hEl) hEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
         if (aEl) aEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
-        if (!res || res.status !== 'FINISHED' || res.h == null) {
-            if (resEl) resEl.textContent = '';
+        if (!res) { if (resEl) resEl.innerHTML = ''; return; }
+        const live = res.status === 'IN_PLAY' || res.status === 'PAUSED' || res.status === 'HALF_TIME';
+        if (live) {
+            if (resEl) {
+                const score = res.h != null ? ` ${res.h}–${res.a}` : '';
+                const label = res.status === 'HALF_TIME' ? 'HT' : 'Live';
+                resEl.innerHTML = `<span class="live-dot"></span><span class="mres-live">${label}${score}</span>`;
+            }
             return;
         }
+        if (res.status !== 'FINISHED' || res.h == null) { if (resEl) resEl.innerHTML = ''; return; }
         if (resEl) resEl.textContent = res.h + '–' + res.a;
         const tipH = parseInt(hEl?.value);
         const tipA = parseInt(aEl?.value);
@@ -470,8 +480,7 @@ async function fetchResults(silent = false) {
         const unmatched = (data.matches || []).filter(am =>
             !M.some(m => teamMatches(am.homeTeam.name, m.h) && teamMatches(am.awayTeam.name, m.b))
         ).map(am => am.homeTeam.name + ' v ' + am.awayTeam.name);
-        const nextTime = new Date(Date.now() + AUTO_FETCH_INTERVAL).toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'});
-        st.textContent = `✓ ${n} avslutade matcher — nästa auto-hämtning ${nextTime}` + (unmatched.length ? ` | Omatchade: ${unmatched.join(', ')}` : '');
+        st.textContent = `✓ ${n} avslutade matcher` + (unmatched.length ? ` | Omatchade: ${unmatched.join(', ')}` : '');
     } catch(e) {
         st.textContent = 'Fel: ' + (e.message || e);
     }
@@ -501,7 +510,7 @@ async function showAdminContent() {
 }
 
 let autoFetchTimer = null;
-const AUTO_FETCH_INTERVAL = 15 * 60 * 1000;
+const AUTO_FETCH_INTERVAL = 60 * 1000;
 
 function startAutoFetch() {
     if (autoFetchTimer) return;

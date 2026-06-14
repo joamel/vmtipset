@@ -2,7 +2,7 @@ name: Hämta matchresultat
 
 on:
   schedule:
-    - cron: '0 * * * *'   # varje hel timme
+    - cron: '*/5 * * * *'  # var 5:e minut
   workflow_dispatch:        # möjlighet att köra manuellt från GitHub
 
 jobs:
