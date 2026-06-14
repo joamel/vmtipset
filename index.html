@@ -490,14 +490,19 @@ async function startResultsRefresh() {
         const snap = await db.collection('meta').doc('config').get();
         const key = snap.exists && snap.data().fdApiKey;
         if (!key) return;
-        setInterval(async () => {
+
+        const tryFetch = async () => {
             try {
                 const rsnap = await db.collection('meta').doc('results').get();
                 const age = rsnap.exists ? Date.now() - new Date(rsnap.data().updatedAt).getTime() : Infinity;
-                if (age > 50000) await fetchAndStore(key);
-            } catch(e) {}
-        }, 60000);
-    } catch(e) {}
+                if (age < 45000) return;
+                await fetchAndStore(key);
+            } catch(e) { console.warn('results refresh:', e.message); }
+        };
+
+        tryFetch();
+        setInterval(tryFetch, 60000);
+    } catch(e) { console.warn('startResultsRefresh:', e.message); }
 }
 
 async function showAdminContent() {
