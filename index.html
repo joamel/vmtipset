@@ -742,7 +742,7 @@ function importExcels(input) {
                         <div style="color:#888;font-size:.75rem">${data.filled}/72 matcher • ${file.name}</div>
                     </div>
                     <div id="ir-st${idx}" style="font-size:.8rem;color:#22a349;white-space:nowrap"></div>
-                    <button onclick="removeImport(${idx})" style="background:none;border:none;font-size:.95rem;cursor:pointer;color:#aaa;padding:0 2px;line-height:1" title="Ta bort">✕</button>`;
+                    <button onclick="removeImport(${idx})" class="la-del">✕</button>`;
                 list.appendChild(row);
             } catch(err) {
                 const row = document.createElement('div');
