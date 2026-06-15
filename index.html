@@ -174,6 +174,16 @@
             </form>
             <div id="fetch-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
         </div>
+        <div class="card" id="tabell-card" style="display:none">
+            <div class="ct">Livetabell</div>
+            <p style="font-size:.85rem;color:#666;margin:0 0 12px">Tabellen uppdateras bara när du trycker på knappen nedan.</p>
+            <div class="fi" style="margin-bottom:10px">
+                <label>Kommentar (visas på tabellsidan)</label>
+                <input type="text" id="tabell-comment" placeholder="t.ex. Tight i toppen efter omgång 1!" autocomplete="off">
+            </div>
+            <button class="create-btn" id="tabell-btn" onclick="updateTabell()">Uppdatera livetabellen</button>
+            <div id="tabell-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
+        </div>
     </div>
 </div>
 
@@ -596,6 +606,7 @@ async function showAdminContent() {
     document.getElementById('import-card').style.display = 'block';
     initImportDrop();
     document.getElementById('results-card').style.display = 'block';
+    document.getElementById('tabell-card').style.display = 'block';
     if (!db) { document.getElementById('fb-notice').style.display = 'block'; return; }
     try {
         const snap = await db.collection('meta').doc('config').get();
@@ -607,6 +618,14 @@ async function showAdminContent() {
                 document.getElementById('fetch-st').textContent = 'Senast hämtat: ' + d;
             }
             startAutoFetch();
+        }
+        const tsnap = await db.collection('meta').doc('tabell').get();
+        if (tsnap.exists) {
+            if (tsnap.data().comment) document.getElementById('tabell-comment').value = tsnap.data().comment;
+            if (tsnap.data().updatedAt) {
+                const d = new Date(tsnap.data().updatedAt).toLocaleString('sv-SE');
+                document.getElementById('tabell-st').textContent = 'Senast uppdaterad: ' + d;
+            }
         }
     } catch(e) {}
     startAdminListener();
@@ -626,6 +645,65 @@ function startAutoFetch() {
         }, interval);
     };
     schedule();
+}
+
+async function updateTabell() {
+    const btn = document.getElementById('tabell-btn');
+    const st  = document.getElementById('tabell-st');
+    const comment = document.getElementById('tabell-comment').value.trim();
+    btn.disabled = true;
+    st.textContent = 'Beräknar...';
+    try {
+        const [rSnap, kSnap] = await Promise.all([
+            db.collection('meta').doc('results').get(),
+            db.collection('kuponger').get()
+        ]);
+        const results  = rSnap.exists ? (rSnap.data().results || []) : [];
+        const kuponger = kSnap.docs.map(d => ({ ...d.data() }));
+
+        const nextMatchItems = M.map((m, i) => ({ m, i }))
+            .filter(({ i }) => { const r = results[i]; return !r || r.status !== 'FINISHED'; })
+            .sort((a, b) => matchStartUtc(a.m) - matchStartUtc(b.m))
+            .slice(0, 3);
+
+        const nextMatches = nextMatchItems.map(({ m }) => ({
+            label: m.h + ' – ' + m.b,
+            time: m.t + ' ' + m.d.replace(/^\w+ /, '')
+        }));
+
+        const rows = kuponger.map(k => {
+            const tips  = k.tips || [];
+            const alias = k.alias || k.namn || k.label || 'Namnlös';
+            let pts = 0, exact = 0, correct = 0, wrong = 0;
+            results.forEach((res, i) => {
+                if (!res || res.status !== 'FINISHED' || res.h == null) return;
+                const t  = tips[i];
+                const th = parseInt(typeof t === 'object' ? t.h : (t?.[0] ?? ''));
+                const ta = parseInt(typeof t === 'object' ? t.a : (t?.[1] ?? ''));
+                if (isNaN(th) || isNaN(ta)) return;
+                const p = calcPoints(th, ta, res.h, res.a);
+                pts += p;
+                if (th === res.h && ta === res.a) exact++;
+                else if (outcome(th, ta) === outcome(res.h, res.a)) correct++;
+                else wrong++;
+            });
+            const nextTips = nextMatchItems.map(({ i }) => {
+                const t = tips[i];
+                const h = t ? (typeof t === 'object' ? t.h : t[0]) : '';
+                const a = t ? (typeof t === 'object' ? t.a : t[1]) : '';
+                return (h !== '' && h != null && a !== '' && a != null) ? `${h}–${a}` : '–';
+            });
+            return { alias, pts, exact, correct, wrong, nextTips };
+        }).sort((a, b) => b.pts - a.pts || b.exact - a.exact || b.correct - a.correct);
+
+        const updatedAt = new Date().toISOString();
+        await db.collection('meta').doc('tabell').set({ rows, nextMatches, comment, updatedAt });
+        const d = new Date(updatedAt).toLocaleString('sv-SE');
+        st.textContent = `✓ Tabell uppdaterad ${d} (${rows.length} deltagare)`;
+    } catch(e) {
+        st.textContent = 'Fel: ' + e.message;
+    }
+    btn.disabled = false;
 }
 
 function logout() {
