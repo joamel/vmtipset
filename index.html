@@ -304,6 +304,19 @@ const M = [
     {r:73, d:"Söndag 28 juni",   t:"04.00", h:"Jordanien",               b:"Argentina",                g:"Grupp J"},
 ];
 
+// ─── MATCHTIDER ──────────────────────────────────────────────────────────────
+const MONTHS = {januari:0,februari:1,mars:2,april:3,maj:4,juni:5,juli:6,augusti:7,september:8,oktober:9,november:10,december:11};
+
+function matchStartUtc(m) {
+    const p = m.d.split(' ');
+    const [h, min] = m.t.split('.').map(Number);
+    return Date.UTC(2026, MONTHS[p[2]], parseInt(p[1]), h - 2, min || 0); // CEST = UTC+2
+}
+
+function matchProbablyOver(m) {
+    return Date.now() > matchStartUtc(m) + 2.5 * 3600000;
+}
+
 // ─── RESULTAT ────────────────────────────────────────────────────────────────
 let RESULTS = [];
 
@@ -363,10 +376,11 @@ function updateMatchColors() {
         if (!res) { if (resEl) resEl.innerHTML = ''; return; }
         const live = ['IN_PLAY','PAUSED','HALF_TIME','EXTRA_TIME','PENALTY_SHOOTOUT'].includes(res.status);
         if (live) {
-            if (resEl) {
+            if (matchProbablyOver(M[i])) {
+                if (resEl) resEl.innerHTML = '<span style="color:#aaa;font-size:.6rem">Väntar på resultat</span>';
+            } else if (resEl) {
                 const score = res.h != null ? ` ${res.h}–${res.a}` : '';
-                const label = res.status === 'HALF_TIME' ? 'HT' : 'Live';
-                resEl.innerHTML = `<span class="live-dot"></span><span class="mres-live">${label}${score}</span>`;
+                resEl.innerHTML = `<span class="live-dot"></span><span class="mres-live">Live${score}</span>`;
             }
             return;
         }
