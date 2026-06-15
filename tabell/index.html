@@ -204,12 +204,11 @@ function renderTable(data) {
     }
 }
 
+const DEFAULT_GROUP = 'joakim';
 const _g = new URLSearchParams(location.search).get('g') || null;
 
 function metaDoc(name) {
-    return _g
-        ? db.collection('groups').doc(_g).collection('meta').doc(name)
-        : db.collection('meta').doc(name);
+    return db.collection('groups').doc(_g || DEFAULT_GROUP).collection('meta').doc(name);
 }
 
 // Back link: preserve group param

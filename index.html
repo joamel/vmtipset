@@ -505,16 +505,20 @@ const _params   = new URLSearchParams(location.search);
 const kupongId  = _params.get('k');
 const groupId   = _params.get('g') || null;
 
-// Firestore helpers — namespace data under group when ?g= is present
+// All data lives under a group. Root URL (no ?g=) uses this default group.
+const DEFAULT_GROUP = 'joakim';
+
+// Must be declared here (before first synchronous use) to avoid TDZ
+let importQueue    = [];
+let importGen      = 0;
+let importDropReady = false;
+
+// Firestore helpers — always namespace data under a group
 function col(name) {
-    return groupId
-        ? db.collection('groups').doc(groupId).collection(name)
-        : db.collection(name);
+    return db.collection('groups').doc(groupId || DEFAULT_GROUP).collection(name);
 }
 function metaDoc(name) {
-    return groupId
-        ? db.collection('groups').doc(groupId).collection('meta').doc(name)
-        : db.collection('meta').doc(name);
+    return db.collection('groups').doc(groupId || DEFAULT_GROUP).collection('meta').doc(name);
 }
 // Results are always global (same tournament, shared across groups)
 function resultsDoc() { return db.collection('meta').doc('results'); }
@@ -535,7 +539,7 @@ if (kupongId) {
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
 
 async function initAdmin() {
-    if (sessionStorage.getItem('adminAuth_' + (groupId || '')) === 'ok') {
+    if (sessionStorage.getItem('adminAuth_' + (groupId || DEFAULT_GROUP)) === 'ok') {
         showAdminContent();
     } else {
         await checkFirstRun();
@@ -561,7 +565,7 @@ async function tryLogin() {
     try {
         const snap = await metaDoc('config').get();
         if (snap.exists && snap.data().adminPassword === pw) {
-            sessionStorage.setItem('adminAuth_' + (groupId || ''), 'ok');
+            sessionStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
             document.getElementById('pw-err').style.display = 'none';
             showAdminContent();
         } else {
@@ -575,7 +579,7 @@ async function savePassword() {
     if (!pw) return;
     try {
         await metaDoc('config').set({ adminPassword: pw }, { merge: true });
-        sessionStorage.setItem('adminAuth_' + (groupId || ''), 'ok');
+        sessionStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
         showAdminContent();
     } catch(e) {}
 }
@@ -615,7 +619,7 @@ async function fetchResultsShared() {
     const st = document.getElementById('fetch-st');
     st.textContent = 'Hämtar...';
     try {
-        const cfgSnap = await db.collection('meta').doc('config').get();
+        const cfgSnap = await db.collection('groups').doc(DEFAULT_GROUP).collection('meta').doc('config').get();
         const key = cfgSnap.exists && cfgSnap.data().fdApiKey;
         if (!key) { st.textContent = 'Ingen API-nyckel konfigurerad av administratören'; return; }
         const { results } = await fetchAndStore(key);
@@ -630,7 +634,7 @@ async function fetchResultsShared() {
 async function startResultsRefresh() {
     if (!db) return;
     try {
-        const snap = await db.collection('meta').doc('config').get();
+        const snap = await metaDoc('config').get();
         const key = snap.exists && snap.data().fdApiKey;
         if (!key) return;
 
@@ -783,7 +787,7 @@ async function resetGroupPassword() {
 
 function logout() {
     autoFetchStarted = false;
-    sessionStorage.removeItem('adminAuth_' + (groupId || ''));
+    sessionStorage.removeItem('adminAuth_' + (groupId || DEFAULT_GROUP));
     location.reload();
 }
 
@@ -816,7 +820,7 @@ function genId() {
 async function createLink() {
     const name = document.getElementById('new-name').value.trim();
     const id = genId();
-    const url = location.origin + location.pathname + '?k=' + id + (groupId ? '&g=' + encodeURIComponent(groupId) : '');
+    const url = location.origin + location.pathname + '?k=' + id + '&g=' + encodeURIComponent(groupId || DEFAULT_GROUP);
 
     if (db) {
         try {
@@ -841,7 +845,7 @@ async function createLink() {
         } catch(e) {}
     }
 
-    const isAdmin = sessionStorage.getItem('adminAuth_' + (groupId || '')) === 'ok';
+    const isAdmin = sessionStorage.getItem('adminAuth_' + (groupId || DEFAULT_GROUP)) === 'ok';
 
     if (!isAdmin) {
         location.href = url;
@@ -889,10 +893,6 @@ async function deleteKupong(id, name) {
     if (!confirm(`Ta bort kupong för "${name || id}"?`)) return;
     if (db) await col('kuponger').doc(id).delete().catch(() => {});
 }
-
-let importQueue = [];
-let importGen = 0;
-let importDropReady = false;
 
 function parseWorkbook(arrayBuffer) {
     const wb = XLSX.read(arrayBuffer, { type: 'array' });
