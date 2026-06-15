@@ -204,7 +204,19 @@ function renderTable(data) {
     }
 }
 
-db.collection('meta').doc('tabell').onSnapshot(snap => {
+const _g = new URLSearchParams(location.search).get('g') || null;
+
+function metaDoc(name) {
+    return _g
+        ? db.collection('groups').doc(_g).collection('meta').doc(name)
+        : db.collection('meta').doc(name);
+}
+
+// Back link: preserve group param
+const backLink = document.querySelector('a.back-btn');
+if (backLink && _g) backLink.href = '../?g=' + encodeURIComponent(_g);
+
+metaDoc('tabell').onSnapshot(snap => {
     renderTable(snap.exists ? snap.data() : null);
 }, () => {
     document.getElementById('loading').textContent = 'Kunde inte ladda tabellen.';

@@ -484,7 +484,25 @@ function updateMatchColors() {
 }
 
 // ─── ROUTING ─────────────────────────────────────────────────────────────────
-const kupongId = new URLSearchParams(location.search).get('k');
+const _params   = new URLSearchParams(location.search);
+const kupongId  = _params.get('k');
+const groupId   = _params.get('g') || null;
+
+// Firestore helpers — namespace data under group when ?g= is present
+function col(name) {
+    return groupId
+        ? db.collection('groups').doc(groupId).collection(name)
+        : db.collection(name);
+}
+function metaDoc(name) {
+    return groupId
+        ? db.collection('groups').doc(groupId).collection('meta').doc(name)
+        : db.collection('meta').doc(name);
+}
+
+// Set tabell links to include group param
+const _tabelHref = 'tabell/' + (groupId ? '?g=' + encodeURIComponent(groupId) : '');
+document.querySelectorAll('a[href="tabell/"]').forEach(a => a.href = _tabelHref);
 
 if (kupongId) {
     document.getElementById('admin-page').style.display = 'none';
@@ -508,7 +526,7 @@ async function initAdmin() {
 async function checkFirstRun() {
     if (!db) return;
     try {
-        const snap = await db.collection('meta').doc('config').get();
+        const snap = await metaDoc('config').get();
         if (!snap.exists || !snap.data().adminPassword) {
             document.getElementById('pw-input').placeholder = 'Välj ett adminlösenord';
             document.getElementById('pw-btn').textContent = 'Spara lösenord';
@@ -522,7 +540,7 @@ async function tryLogin() {
     if (!pw) return;
     if (!db) { showAdminContent(); return; }
     try {
-        const snap = await db.collection('meta').doc('config').get();
+        const snap = await metaDoc('config').get();
         if (snap.exists && snap.data().adminPassword === pw) {
             sessionStorage.setItem('adminAuth', 'ok');
             document.getElementById('pw-err').style.display = 'none';
@@ -537,7 +555,7 @@ async function savePassword() {
     const pw = document.getElementById('pw-input').value.trim();
     if (!pw) return;
     try {
-        await db.collection('meta').doc('config').set({ adminPassword: pw }, { merge: true });
+        await metaDoc('config').set({ adminPassword: pw }, { merge: true });
         sessionStorage.setItem('adminAuth', 'ok');
         showAdminContent();
     } catch(e) {}
@@ -551,7 +569,7 @@ async function fetchAndStore(key) {
     if (!resp.ok) throw new Error('API-fel ' + resp.status + (resp.status === 403 ? ' — kontrollera API-nyckeln' : ''));
     const data = await resp.json();
     const results = mapApiToResults(data.matches || []);
-    if (db) await db.collection('meta').doc('results').set({ results, updatedAt: new Date().toISOString() });
+    if (db) await metaDoc('results').set({ results, updatedAt: new Date().toISOString() });
     return { results, matches: data.matches || [] };
 }
 
@@ -561,7 +579,7 @@ async function fetchResults(silent = false) {
     if (!key) { if (!silent) st.textContent = 'Ange en API-nyckel'; return; }
     if (!silent) st.textContent = 'Hämtar...';
     try {
-        if (db) await db.collection('meta').doc('config').set({ fdApiKey: key }, { merge: true });
+        if (db) await metaDoc('config').set({ fdApiKey: key }, { merge: true });
         const { results, matches } = await fetchAndStore(key);
         RESULTS = results;
         const n = results.filter(r => r && r.status === 'FINISHED').length;
@@ -577,7 +595,7 @@ async function fetchResults(silent = false) {
 async function startResultsRefresh() {
     if (!db) return;
     try {
-        const snap = await db.collection('meta').doc('config').get();
+        const snap = await metaDoc('config').get();
         const key = snap.exists && snap.data().fdApiKey;
         if (!key) return;
 
@@ -586,7 +604,7 @@ async function startResultsRefresh() {
             if (wait > 0) { setTimeout(schedule, Math.min(wait, 3600000)); return; }
             const interval = anyMatchLive() ? 60000 : 300000;
             try {
-                const rsnap = await db.collection('meta').doc('results').get();
+                const rsnap = await metaDoc('results').get();
                 const age = rsnap.exists ? Date.now() - new Date(rsnap.data().updatedAt).getTime() : Infinity;
                 if (age > interval * 0.8) await fetchAndStore(key);
             } catch(e) { console.warn('results refresh:', e.message); }
@@ -609,17 +627,17 @@ async function showAdminContent() {
     document.getElementById('tabell-card').style.display = 'block';
     if (!db) { document.getElementById('fb-notice').style.display = 'block'; return; }
     try {
-        const snap = await db.collection('meta').doc('config').get();
+        const snap = await metaDoc('config').get();
         if (snap.exists && snap.data().fdApiKey) {
             document.getElementById('fd-key').value = snap.data().fdApiKey;
-            const rsnap = await db.collection('meta').doc('results').get();
+            const rsnap = await metaDoc('results').get();
             if (rsnap.exists && rsnap.data().updatedAt) {
                 const d = new Date(rsnap.data().updatedAt).toLocaleString('sv-SE');
                 document.getElementById('fetch-st').textContent = 'Senast hämtat: ' + d;
             }
             startAutoFetch();
         }
-        const tsnap = await db.collection('meta').doc('tabell').get();
+        const tsnap = await metaDoc('tabell').get();
         if (tsnap.exists) {
             if (tsnap.data().comment) document.getElementById('tabell-comment').value = tsnap.data().comment;
             if (tsnap.data().updatedAt) {
@@ -655,8 +673,8 @@ async function updateTabell() {
     st.textContent = 'Beräknar...';
     try {
         const [rSnap, kSnap] = await Promise.all([
-            db.collection('meta').doc('results').get(),
-            db.collection('kuponger').get()
+            metaDoc('results').get(),
+            col('kuponger').get()
         ]);
         const results  = rSnap.exists ? (rSnap.data().results || []) : [];
         const kuponger = kSnap.docs.map(d => ({ ...d.data() }));
@@ -697,7 +715,7 @@ async function updateTabell() {
         }).sort((a, b) => b.pts - a.pts || b.exact - a.exact || b.correct - a.correct);
 
         const updatedAt = new Date().toISOString();
-        await db.collection('meta').doc('tabell').set({ rows, nextMatches, comment, updatedAt });
+        await metaDoc('tabell').set({ rows, nextMatches, comment, updatedAt });
         const d = new Date(updatedAt).toLocaleString('sv-SE');
         st.textContent = `✓ Tabell uppdaterad ${d} (${rows.length} deltagare)`;
     } catch(e) {
@@ -714,7 +732,7 @@ function logout() {
 
 function startAdminListener() {
     if (db) {
-        db.collection('kuponger').onSnapshot(snapshot => {
+        col('kuponger').onSnapshot(snapshot => {
             const docs = snapshot.docs.map(d => ({
                 id: d.id,
                 name: d.data().label || d.data().namn || '',
@@ -735,11 +753,11 @@ function genId() {
 async function createLink() {
     const name = document.getElementById('new-name').value.trim();
     const id = genId();
-    const url = location.origin + location.pathname + '?k=' + id;
+    const url = location.origin + location.pathname + '?k=' + id + (groupId ? '&g=' + encodeURIComponent(groupId) : '');
 
     if (db) {
         try {
-            await db.collection('kuponger').doc(id).set({
+            await col('kuponger').doc(id).set({
                 label: name, namn: name, alias: '', email: '', tips: [],
                 createdAt: new Date().toISOString()
             });
@@ -753,7 +771,7 @@ async function createLink() {
 
     if (db) {
         try {
-            await db.collection('meta').doc('links').set(
+            await metaDoc('links').set(
                 { list: firebase.firestore.FieldValue.arrayUnion(entry) },
                 { merge: true }
             );
@@ -787,7 +805,7 @@ function renderLinksFromData(links) {
     const el = document.getElementById('links-list');
     if (!links.length) { el.innerHTML = '<p style="color:#888;font-size:.9rem">Inga kuponger ännu.</p>'; return; }
     el.innerHTML = links.map(l => {
-        const url = location.origin + location.pathname + '?k=' + l.id;
+        const url = location.origin + location.pathname + '?k=' + l.id + (groupId ? '&g=' + encodeURIComponent(groupId) : '');
         const date = l.createdAt ? new Date(l.createdAt).toLocaleDateString('sv-SE') : '';
         const check = l.klar ? ' <span style="color:#22a349;font-size:1rem">✓</span>' : '';
         return `<div class="link-row">
@@ -806,7 +824,7 @@ function renderLinksFromData(links) {
 
 async function deleteKupong(id, name) {
     if (!confirm(`Ta bort kupong för "${name || id}"?`)) return;
-    if (db) await db.collection('kuponger').doc(id).delete().catch(() => {});
+    if (db) await col('kuponger').doc(id).delete().catch(() => {});
 }
 
 let importQueue = [];
@@ -894,7 +912,7 @@ async function saveAllImported() {
         if (!d) continue;
         const stEl = document.getElementById('ir-st' + i);
         try {
-            await db.collection('kuponger').doc(genId()).set({
+            await col('kuponger').doc(genId()).set({
                 label: d.namn, namn: d.namn, alias: d.alias,
                 email: d.email, tips: d.tips, createdAt: new Date().toISOString()
             });
@@ -914,7 +932,7 @@ function renderLinksList() {
     const el = document.getElementById('links-list');
     if (!links.length) { el.innerHTML = '<p style="color:#888;font-size:.9rem">Inga kuponger ännu.</p>'; return; }
     el.innerHTML = [...links].reverse().map(l => {
-        const url = location.origin + location.pathname + '?k=' + l.id;
+        const url = location.origin + location.pathname + '?k=' + l.id + (groupId ? '&g=' + encodeURIComponent(groupId) : '');
         const date = new Date(l.createdAt).toLocaleDateString('sv-SE');
         return `<div class="link-row">
             <div class="link-info">
@@ -930,7 +948,7 @@ function renderLinksList() {
 
     if (db) {
         [...links].forEach(l => {
-            db.collection('kuponger').doc(l.id).onSnapshot(snap => {
+            col('kuponger').doc(l.id).onSnapshot(snap => {
                 const lockEl = document.getElementById('lock-' + l.id);
                 if (lockEl) lockEl.innerHTML = snap.exists && snap.data()?.klar ? ' <span style="color:#22a349;font-size:1rem">✓</span>' : '';
             });
@@ -956,7 +974,7 @@ let klarStatus = false;
 function toggleKlar() {
     klarStatus = !klarStatus;
     updateKlarBtn();
-    if (db) db.collection('kuponger').doc(kupongId).update({ klar: klarStatus }).catch(() => {});
+    if (db) col('kuponger').doc(kupongId).update({ klar: klarStatus }).catch(() => {});
 }
 
 function updateKlarBtn() {
@@ -975,14 +993,14 @@ function updateKlarBtn() {
 function initParticipant() {
     render();
     if (db) {
-        db.collection('kuponger').doc(kupongId)
+        col('kuponger').doc(kupongId)
             .onSnapshot({ includeMetadataChanges: true }, snap => {
                 if (snap.metadata.hasPendingWrites) return;
                 if (snap.exists) applyState(snap.data());
             }, () => {
                 try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
             });
-        db.collection('meta').doc('results').onSnapshot(snap => {
+        metaDoc('results').onSnapshot(snap => {
             if (snap.exists) { RESULTS = snap.data().results || []; updateMatchColors(); }
         });
         startResultsRefresh();
@@ -1034,7 +1052,7 @@ function save() {
 async function cloudSave() {
     if (!db) { setSaveSt(''); return; }
     try {
-        await db.collection('kuponger').doc(kupongId).update(getState());
+        await col('kuponger').doc(kupongId).update(getState());
         setSaveSt('Sparad ✓');
         setTimeout(() => setSaveSt(''), 3000);
     } catch(e) { setSaveSt(''); }
