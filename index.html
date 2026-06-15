@@ -576,19 +576,22 @@ async function tryLogin() {
     const pw = document.getElementById('pw-input').value;
     if (!pw) return;
     if (!db) { showAdminContent(); return; }
+    const errEl = document.getElementById('pw-err');
     try {
         const { g, r } = await cfgSnapshots();
         const gPw = g?.exists ? g.data()?.adminPassword : null;
         const rPw = r?.exists ? r.data()?.adminPassword : null;
         if ((gPw && gPw === pw) || (rPw && rPw === pw)) {
             sessionStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
-            document.getElementById('pw-err').style.display = 'none';
+            errEl.style.display = 'none';
             showAdminContent();
         } else {
-            document.getElementById('pw-err').style.display = 'block';
+            errEl.textContent = `Fel lösenord — g:${g?.exists ? 'ok' : 'saknas'} r:${r?.exists ? 'ok' : 'saknas'} gPw:${gPw ? 'satt' : 'ej satt'} rPw:${rPw ? 'satt' : 'ej satt'}`;
+            errEl.style.display = 'block';
         }
     } catch(e) {
-        document.getElementById('pw-err').style.display = 'block';
+        errEl.textContent = 'Fel: ' + e.message;
+        errEl.style.display = 'block';
     }
 }
 
