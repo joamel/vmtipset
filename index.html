@@ -184,6 +184,16 @@
             <button class="create-btn" id="tabell-btn" onclick="updateTabell()">Uppdatera livetabellen</button>
             <div id="tabell-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
         </div>
+        <div class="card" id="group-admin-card" style="display:none">
+            <div class="ct">Gruppadmin</div>
+            <p style="font-size:.85rem;color:#666;margin:0 0 12px">Nollställ lösenordet för en grupp om de glömt det. De kan sedan sätta ett nytt när de besöker sin URL.</p>
+            <div class="fi" style="margin-bottom:10px">
+                <label>Grupp-ID</label>
+                <input type="text" id="reset-gid" placeholder="t.ex. lars" autocomplete="off">
+            </div>
+            <button class="create-btn" style="background:#e67e00" onclick="resetGroupPassword()">Nollställ lösenord</button>
+            <div id="reset-gid-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
+        </div>
     </div>
 </div>
 
@@ -625,6 +635,7 @@ async function showAdminContent() {
     initImportDrop();
     document.getElementById('results-card').style.display = 'block';
     document.getElementById('tabell-card').style.display = 'block';
+    if (!groupId) document.getElementById('group-admin-card').style.display = 'block';
     if (!db) { document.getElementById('fb-notice').style.display = 'block'; return; }
     try {
         const snap = await metaDoc('config').get();
@@ -722,6 +733,21 @@ async function updateTabell() {
         st.textContent = 'Fel: ' + e.message;
     }
     btn.disabled = false;
+}
+
+async function resetGroupPassword() {
+    const gid = document.getElementById('reset-gid').value.trim();
+    const st  = document.getElementById('reset-gid-st');
+    if (!gid) { st.textContent = 'Ange ett grupp-ID'; return; }
+    if (!confirm(`Nollställ lösenordet för grupp "${gid}"? De kan sedan välja ett nytt.`)) return;
+    try {
+        await db.collection('groups').doc(gid).collection('meta').doc('config')
+            .update({ adminPassword: firebase.firestore.FieldValue.delete() });
+        st.textContent = `✓ Lösenord nollställt för "${gid}"`;
+        document.getElementById('reset-gid').value = '';
+    } catch(e) {
+        st.textContent = 'Fel: ' + (e.message || e);
+    }
 }
 
 function logout() {
