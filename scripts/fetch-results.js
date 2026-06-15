@@ -54,7 +54,7 @@ const TEAM_EN = {
     'nederländerna':['netherlands'],'japan':['japan'],
     "elfenbenskusten":["côte d'ivoire","ivory coast","cote d'ivoire"],
     'ecuador':['ecuador'],'sverige':['sweden'],'tunisien':['tunisia'],
-    'spanien':['spain'],'kap verde':['cape verde','cabo verde'],
+    'spanien':['spain'],'kap verde':['cape verde','cabo verde','cape verde islands'],
     'belgien':['belgium'],'egypten':['egypt'],'saudiarabien':['saudi arabia'],
     'uruguay':['uruguay'],'iran':['iran'],'nya zeeland':['new zealand'],
     'frankrike':['france'],'senegal':['senegal'],'irak':['iraq'],

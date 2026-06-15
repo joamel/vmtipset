@@ -318,7 +318,7 @@ const TEAM_EN = {
     'nederländerna':['netherlands'],'japan':['japan'],
     "elfenbenskusten":["côte d'ivoire","ivory coast","cote d'ivoire"],
     'ecuador':['ecuador'],'sverige':['sweden'],'tunisien':['tunisia'],
-    'spanien':['spain'],'kap verde':['cape verde','cabo verde'],
+    'spanien':['spain'],'kap verde':['cape verde','cabo verde','cape verde islands'],
     'belgien':['belgium'],'egypten':['egypt'],'saudiarabien':['saudi arabia'],
     'uruguay':['uruguay'],'iran':['iran'],'nya zeeland':['new zealand'],
     'frankrike':['france'],'senegal':['senegal'],'irak':['iraq'],
@@ -361,7 +361,7 @@ function updateMatchColors() {
         if (hEl) hEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
         if (aEl) aEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
         if (!res) { if (resEl) resEl.innerHTML = ''; return; }
-        const live = res.status === 'IN_PLAY' || res.status === 'PAUSED' || res.status === 'HALF_TIME';
+        const live = ['IN_PLAY','PAUSED','HALF_TIME','EXTRA_TIME','PENALTY_SHOOTOUT'].includes(res.status);
         if (live) {
             if (resEl) {
                 const score = res.h != null ? ` ${res.h}–${res.a}` : '';
