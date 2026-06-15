@@ -18,6 +18,7 @@
         .hd { display: flex; align-items: center; gap: 10px; }
         header h1 { font-size: 1.05rem; font-weight: 700; }
         .hs { font-size: .72rem; opacity: .7; margin-top: 1px; }
+        .hbtn { background: rgba(255,255,255,.15); border: none; color: #fff; padding: 5px 12px; border-radius: 6px; font-size: .8rem; cursor: pointer; text-decoration: none; display: inline-block; }
         #prog { background: rgba(255,255,255,.2); padding: 4px 10px; border-radius: 20px; font-size: .8rem; font-weight: 700; }
         #save-st { font-size: .72rem; color: rgba(255,255,255,.8); margin-right: 6px; }
 
@@ -26,12 +27,15 @@
         .card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 11px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
         .ct { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #003087; margin-bottom: 11px; }
 
-        .ig { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-        .ig .ef { grid-column: span 2; }
-        @media(min-width:480px) { .ig { grid-template-columns: 1fr 1fr 2fr; } .ig .ef { grid-column: auto; } }
         .fi label { display: block; font-size: .7rem; font-weight: 600; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
         .fi input { width: 100%; padding: 9px 10px; border: 1.5px solid #ddd; border-radius: 7px; font-size: .92rem; background: #fafafa; transition: border-color .13s; }
         .fi input:focus { outline: none; border-color: #003087; background: #fff; }
+        .create-btn { width: 100%; margin-top: 12px; padding: 13px; background: #1a9e3f; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+        .create-btn:active { background: #157d33; }
+
+        .ig { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+        .ig .ef { grid-column: span 2; }
+        @media(min-width:480px) { .ig { grid-template-columns: 1fr 1fr 2fr; } .ig .ef { grid-column: auto; } }
 
         .gh { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #b06500; padding: 11px 0 3px; border-top: 1px solid #eee; margin-top: 2px; }
         .gh:first-child { border-top: none; padding-top: 0; }
@@ -64,50 +68,11 @@
         .btn { padding: 11px 0; border: none; border-radius: 8px; font-size: .93rem; font-weight: 700; cursor: pointer; flex: 1; max-width: 230px; }
         .bs { background: #003087; color: #fff; }
         .bd { background: #1a9e3f; color: #fff; }
-        .bo { background: #f0f0f0; color: #555; }
 
-        /* Admin */
-        .create-btn { width: 100%; margin-top: 12px; padding: 13px; background: #1a9e3f; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
-        .create-btn:active { background: #157d33; }
-        .created-box { margin-top: 12px; padding: 12px; background: #f0f9f4; border: 1.5px solid #4caf50; border-radius: 8px; }
-        .created-box .cl { font-size: .72rem; font-weight: 700; text-transform: uppercase; color: #1a9e3f; margin-bottom: 6px; }
-        .created-box .cu { font-size: .78rem; color: #333; word-break: break-all; font-family: monospace; margin-bottom: 10px; background: #fff; padding: 8px; border-radius: 5px; }
-        .ub { display: flex; gap: 8px; }
-        .ub button { flex: 1; padding: 10px; border: none; border-radius: 7px; font-size: .9rem; font-weight: 700; cursor: pointer; }
-        .ub .bcp { background: #003087; color: #fff; }
-        .ub .bsh { background: #e8edf5; color: #003087; }
-
-        .link-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f2f2f2; gap: 8px; }
-        .link-row:last-child { border-bottom: none; }
-        .link-info { flex: 1; min-width: 0; }
-        .link-name { font-weight: 600; font-size: .9rem; }
-        .link-date { font-size: .72rem; color: #999; margin-top: 2px; }
-        .link-status { font-size: .72rem; font-weight: 600; margin-top: 3px; }
-        .link-status.done { color: #1a9e3f; }
-        .link-status.partial { color: #e67e00; }
-        .link-status.empty { color: #aaa; }
-        .link-actions { display: flex; gap: 6px; flex-shrink: 0; }
-        .link-actions a, .link-actions button { padding: 7px 11px; border-radius: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-block; }
-        .la-cp { background: #f0f0f0; color: #333; }
-        .la-open { background: #003087; color: #fff; }
-        .la-del { background: #fee2e2; color: #c00; }
-        .la-del:hover { background: #fca5a5; }
-        .ir-del { background: none; border: 1.5px solid #ddd; color: #ccc; border-radius: 50%; width: 26px; height: 26px; font-size: .7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color .15s, color .15s; flex-shrink: 0; padding: 0; }
-        .ir-del:hover { border-color: #e53935; color: #e53935; }
-        #pw-err { color: #c00; font-size: .82rem; margin-top: 6px; display: none; }
-
-        .notice { padding: 10px 12px; background: #fff8e1; border-left: 3px solid #f59e0b; border-radius: 6px; font-size: .82rem; color: #7a5c00; margin-bottom: 11px; }
-
-        /* Modal */
-        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-end; justify-content: center; }
-        #modal.on { display: flex; }
-        .mb { background: #fff; border-radius: 16px 16px 0 0; padding: 20px 16px 32px; width: 100%; max-width: 580px; }
-        .mt { font-weight: 700; font-size: 1rem; margin-bottom: 5px; }
-        .ms { color: #666; font-size: .85rem; margin-bottom: 13px; }
-        #ubox { width: 100%; padding: 9px; border: 1.5px solid #ddd; border-radius: 7px; font-size: .75rem; color: #444; word-break: break-all; background: #f8f8f8; resize: none; height: 72px; font-family: monospace; }
-        .mbt { display: flex; gap: 8px; margin-top: 9px; }
-        .bcp2 { background: #003087; color: #fff; border: none; padding: 11px 0; border-radius: 8px; font-size: .93rem; font-weight: 700; cursor: pointer; flex: 1; }
-        .bcl2 { background: #f0f0f0; color: #333; border: none; padding: 11px 20px; border-radius: 8px; font-size: .93rem; font-weight: 600; cursor: pointer; }
+        .closed-notice { padding: 30px 20px; text-align: center; }
+        .closed-notice .icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .closed-notice h2 { font-size: 1.1rem; margin-bottom: 6px; }
+        .closed-notice p { font-size: .85rem; color: #666; }
 
         #toast { position: fixed; top: 66px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 9px 18px; border-radius: 20px; font-size: .88rem; z-index: 300; opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap; }
         #toast.on { opacity: 1; }
@@ -115,95 +80,32 @@
 </head>
 <body>
 
-<!-- ===================== ADMIN PAGE ===================== -->
-<div id="admin-page">
+<!-- ===================== PUBLIC PAGE ===================== -->
+<div id="public-page" style="display:none">
     <header>
         <div class="hd">
             <span style="font-size:1.6rem;line-height:1">⚽</span>
             <div><h1>VM 2026 Tipskupong</h1><div class="hs">Skapa och dela kuponger</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
-            <a href="tabell/" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:.8rem;text-decoration:none">Tabell</a>
-            <button id="logout-btn" onclick="logout()" style="display:none;background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:.8rem;cursor:pointer">Logga ut</button>
+            <a id="pub-tabell-link" href="tabell/" class="hbtn">Tabell</a>
+            <a id="pub-admin-link" href="admin/" class="hbtn">Admin</a>
         </div>
     </header>
-
     <div class="wrap">
-        <div id="fb-notice" class="notice" style="display:none">
-            Firebase är inte konfigurerat — kuponger sparas bara lokalt på din enhet.
-        </div>
-        <div class="card" id="create-card">
+        <div class="card" id="create-card" style="display:none">
             <div class="ct">Skapa kupong</div>
             <form autocomplete="off" onsubmit="createLink();return false">
-                <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Anna Andersson" autocomplete="off"></div>
-                <button class="create-btn" id="create-btn" type="submit">Skapa kupong</button>
+                <div class="fi"><label>Ditt namn</label><input type="text" id="new-name" placeholder="t.ex. Anna Andersson" autocomplete="off"></div>
+                <button class="create-btn" type="submit">Skapa min kupong</button>
             </form>
-            <div id="created-result"></div>
         </div>
-        <div class="card" id="links-card">
-            <div class="ct">Alla kuponger</div>
-            <div id="registration-section" style="display:none;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;padding:7px 12px;background:#f5f5f5;border-radius:8px">
-                <span id="registration-status" style="font-size:.83rem;color:#555"></span>
-                <button id="registration-btn" onclick="toggleRegistration()" style="border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap"></button>
+        <div class="card" id="closed-card" style="display:none">
+            <div class="closed-notice">
+                <div class="icon">🔒</div>
+                <h2>Anmälan är stängd</h2>
+                <p>Kontakta administratören om du vill delta.</p>
             </div>
-            <div id="pw-section">
-                <form onsubmit="tryLogin();return false">
-                    <div class="fi" style="margin-bottom:8px">
-                        <input type="password" id="pw-input" placeholder="Adminlösenord" autocomplete="current-password">
-                    </div>
-                    <div id="pw-err">Fel lösenord – försök igen</div>
-                    <button class="create-btn" id="pw-btn" type="submit" style="margin-top:0">Lås upp</button>
-                </form>
-            </div>
-            <div id="links-list" style="display:none"></div>
-        </div>
-        <div class="card" id="import-card" style="display:none">
-            <div class="ct">Importera kuponger</div>
-            <label id="import-drop" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:2px dashed #c8d8f0;border-radius:10px;padding:20px;cursor:pointer;background:#f8faff;transition:background .15s">
-                <span style="font-size:1.6rem">📂</span>
-                <span style="font-size:.85rem;color:#555">Välj en eller flera Excel-filer</span>
-                <span style="font-size:.75rem;color:#aaa">.xlsx / .xls</span>
-                <input type="file" id="import-file" accept=".xlsx,.xls" multiple style="display:none" onchange="importExcels(this)">
-            </label>
-            <div id="import-list" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
-            <button id="import-save-btn" class="create-btn" onclick="saveAllImported()" style="display:none;margin-top:4px">Spara alla kuponger</button>
-        </div>
-        <div class="card" id="results-card" style="display:none">
-            <div class="ct">Matchresultat</div>
-            <!-- Root admin: API-nyckel + hämta -->
-            <div id="results-root">
-                <p style="font-size:.85rem;color:#666;margin:0 0 10px">Hämtar resultat från football-data.org och rättar alla kuponger live. <a href="https://www.football-data.org/client/register" target="_blank" style="color:#003087">Skaffa gratis API-nyckel</a></p>
-                <form autocomplete="off" onsubmit="fetchResults();return false">
-                    <div class="fi"><label>API-nyckel</label><input type="text" id="fd-key" autocomplete="off" placeholder="Klistra in din API-nyckel"></div>
-                    <button class="create-btn" type="submit">Hämta resultat nu</button>
-                </form>
-            </div>
-            <!-- Grupp-admin: hämta med delad nyckel -->
-            <div id="results-group" style="display:none">
-                <p style="font-size:.85rem;color:#666;margin:0 0 10px">Resultat delas av alla grupper och hämtas automatiskt. Du kan också uppdatera manuellt.</p>
-                <button class="create-btn" onclick="fetchResultsShared()">Hämta senaste resultaten</button>
-            </div>
-            <div id="fetch-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
-        </div>
-        <div class="card" id="tabell-card" style="display:none">
-            <div class="ct">Livetabell</div>
-            <p style="font-size:.85rem;color:#666;margin:0 0 12px">Tabellen uppdateras bara när du trycker på knappen nedan.</p>
-            <div class="fi" style="margin-bottom:10px">
-                <label>Kommentar (visas på tabellsidan)</label>
-                <input type="text" id="tabell-comment" placeholder="t.ex. Tight i toppen efter omgång 1!" autocomplete="off">
-            </div>
-            <button class="create-btn" id="tabell-btn" onclick="updateTabell()">Uppdatera livetabellen</button>
-            <div id="tabell-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
-        </div>
-        <div class="card" id="group-admin-card" style="display:none">
-            <div class="ct">Gruppadmin</div>
-            <p style="font-size:.85rem;color:#666;margin:0 0 12px">Nollställ lösenordet för en grupp om de glömt det. De kan sedan sätta ett nytt när de besöker sin URL.</p>
-            <div class="fi" style="margin-bottom:10px">
-                <label>Grupp-ID</label>
-                <input type="text" id="reset-gid" placeholder="t.ex. lars" autocomplete="off">
-            </div>
-            <button class="create-btn" style="background:#e67e00" onclick="resetGroupPassword()">Nollställ lösenord</button>
-            <div id="reset-gid-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
         </div>
     </div>
 </div>
@@ -217,7 +119,8 @@
         </div>
         <div style="display:flex;align-items:center;gap:6px">
             <div id="save-st"></div>
-            <a href="tabell/" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:.8rem;text-decoration:none">Tabell</a>
+            <a id="part-back-link" href="./" class="hbtn">← Start</a>
+            <a id="part-tabell-link" href="tabell/" class="hbtn">Tabell</a>
             <div id="prog">0 / 72</div>
         </div>
     </header>
@@ -244,22 +147,9 @@
     </div>
 </div>
 
-<div id="modal">
-    <div class="mb">
-        <div class="mt">Dela länk</div>
-        <div class="ms">Kopiera och skicka länken.</div>
-        <textarea id="ubox" readonly></textarea>
-        <div class="mbt">
-            <button class="bcp2" onclick="copyModalUrl()">Kopiera länken</button>
-            <button class="bcl2" onclick="closeModal()">Stäng</button>
-        </div>
-    </div>
-</div>
 <div id="toast"></div>
-
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-// ─── FIREBASE CONFIG — fyll i efter att du skapat projektet ──────────────────
 const FB = {
     apiKey:            "AIzaSyDAHF8OHv67aCk8uC15jjGDKfns7a7woec",
     authDomain:        "vmtipset-59e38.firebaseapp.com",
@@ -268,14 +158,9 @@ const FB = {
     messagingSenderId: "475538731303",
     appId:             "1:475538731303:web:a2a9a307d52b252b47f902"
 };
-// ─────────────────────────────────────────────────────────────────────────────
-
 let db = null;
 try {
-    if (FB.apiKey !== 'REPLACE') {
-        firebase.initializeApp(FB);
-        db = firebase.firestore();
-    }
+    if (FB.apiKey !== 'REPLACE') { firebase.initializeApp(FB); db = firebase.firestore(); }
 } catch(e) {}
 
 // ─── MATCHER ─────────────────────────────────────────────────────────────────
@@ -354,40 +239,13 @@ const M = [
     {r:73, d:"Söndag 28 juni",   t:"04.00", h:"Jordanien",               b:"Argentina",                g:"Grupp J"},
 ];
 
-// ─── MATCHTIDER ──────────────────────────────────────────────────────────────
+// ─── TIMING ──────────────────────────────────────────────────────────────────
 const MONTHS = {januari:0,februari:1,mars:2,april:3,maj:4,juni:5,juli:6,augusti:7,september:8,oktober:9,november:10,december:11};
+function matchStartUtc(m) { const p=m.d.split(' '); const [h,min]=m.t.split('.').map(Number); return Date.UTC(2026,MONTHS[p[2]],parseInt(p[1]),h-2,min||0); }
+function anyMatchLive() { const now=Date.now(); return M.some(m=>{const s=matchStartUtc(m);return now>=s&&now<s+2.5*3600000;}); }
+function msUntilNextActivity() { const now=Date.now(); let n=Infinity; for(const m of M){const s=matchStartUtc(m);const e=s+2.5*3600000;const c=e+3600000;if(now<s)n=Math.min(n,s-now);else if(now<c)return 0;} return n; }
 
-function matchStartUtc(m) {
-    const p = m.d.split(' ');
-    const [h, min] = m.t.split('.').map(Number);
-    return Date.UTC(2026, MONTHS[p[2]], parseInt(p[1]), h - 2, min || 0); // CEST = UTC+2
-}
-
-function matchProbablyOver(m) {
-    return Date.now() > matchStartUtc(m) + 2.5 * 3600000;
-}
-
-function anyMatchLive() {
-    const now = Date.now();
-    return M.some(m => { const s = matchStartUtc(m); return now >= s && now < s + 2.5 * 3600000; });
-}
-
-function msUntilNextActivity() {
-    const now = Date.now();
-    let nearest = Infinity;
-    for (const m of M) {
-        const s = matchStartUtc(m);
-        const end = s + 2.5 * 3600000;
-        const cooldown = end + 3600000; // 1h after match for FINISHED to propagate
-        if (now < s) nearest = Math.min(nearest, s - now);           // before match
-        else if (now < cooldown) return 0;                            // active or cooling down
-    }
-    return nearest; // ms until next match starts
-}
-
-// ─── RESULTAT ────────────────────────────────────────────────────────────────
-let RESULTS = [];
-
+// ─── SCORING ─────────────────────────────────────────────────────────────────
 const TEAM_EN = {
     'mexiko':['mexico'],'sydafrika':['south africa'],'sydkorea':['korea republic','south korea'],
     'tjeckien':['czechia','czech republic'],'kanada':['canada'],
@@ -409,479 +267,108 @@ const TEAM_EN = {
     'england':['england'],'kroatien':['croatia'],'ghana':['ghana'],
     'panama':['panama'],'uzbekistan':['uzbekistan'],'colombia':['colombia'],
 };
+function normStr(s){return s.toLowerCase().replace(/[^a-z]/g,'');}
+function teamMatches(a,s){if(!a||!s)return false;const al=TEAM_EN[s.toLowerCase()];if(!al)return false;return al.some(x=>normStr(x)===normStr(a));}
+function outcome(h,a){return h>a?'H':a>h?'A':'D';}
+function calcPoints(th,ta,rh,ra){if(th===rh&&ta===ra)return 25;const dh=Math.abs(th-rh),da=Math.abs(ta-ra),ok=outcome(th,ta)===outcome(rh,ra);return Math.max(0,ok?20-dh-da:10-dh-da);}
+function mapApiToResults(apiMatches){const res=new Array(M.length).fill(null);apiMatches.forEach(am=>{const idx=M.findIndex(m=>teamMatches(am.homeTeam.name,m.h)&&teamMatches(am.awayTeam.name,m.b));if(idx===-1)return;res[idx]={h:am.score.fullTime.home,a:am.score.fullTime.away,status:am.status};});return res;}
 
-function normStr(s) { return s.toLowerCase().replace(/[^a-z]/g, ''); }
-
-function teamMatches(apiName, swe) {
-    if (!apiName || !swe) return false;
-    const aliases = TEAM_EN[swe.toLowerCase()];
-    if (!aliases) return false;
-    return aliases.some(a => normStr(a) === normStr(apiName));
-}
-
-function outcome(h, a) { return h > a ? 'H' : a > h ? 'A' : 'D'; }
-
-function calcPoints(tipH, tipA, resH, resA) {
-    if (tipH === resH && tipA === resA) return 25;
-    const diffH = Math.abs(tipH - resH);
-    const diffA = Math.abs(tipA - resA);
-    const correct = outcome(tipH, tipA) === outcome(resH, resA);
-    return Math.max(0, correct ? 20 - diffH - diffA : 10 - diffH - diffA);
-}
-
-function mapApiToResults(apiMatches) {
-    const res = new Array(M.length).fill(null);
-    apiMatches.forEach(am => {
-        const idx = M.findIndex(m => teamMatches(am.homeTeam.name, m.h) && teamMatches(am.awayTeam.name, m.b));
-        if (idx === -1) return;
-        res[idx] = { h: am.score.fullTime.home, a: am.score.fullTime.away, status: am.status };
-    });
-    return res;
-}
+let RESULTS = [];
 
 function updateMatchColors() {
-    let total = 0, scoredCount = 0;
-    RESULTS.forEach((res, i) => {
+    M.forEach((_, i) => {
+        const r   = RESULTS[i];
         const row = document.getElementById('mr' + i);
-        const resEl = document.getElementById('res' + i);
-        const ptEl = document.getElementById('pt' + i);
-        if (!row) return;
-        row.classList.remove('m-x', 'm-ok', 'm-ng');
-        const hEl = document.getElementById('h' + i);
-        const aEl = document.getElementById('a' + i);
-        if (hEl) hEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
-        if (aEl) aEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
-        if (ptEl) ptEl.textContent = '';
-        if (!res) { if (resEl) resEl.innerHTML = ''; return; }
-        const live = ['IN_PLAY','PAUSED','HALF_TIME','EXTRA_TIME','PENALTY_SHOOTOUT'].includes(res.status);
-        if (live) {
-            if (matchProbablyOver(M[i])) {
-                if (resEl) resEl.innerHTML = '<span style="color:#aaa;font-size:.6rem">Väntar på resultat</span>';
-            } else if (resEl) {
-                const score = res.h != null ? ` ${res.h}–${res.a}` : '';
-                resEl.innerHTML = `<span class="live-dot"></span><span class="mres-live">Live${score}</span>`;
-            }
-            return;
-        }
-        if (res.status !== 'FINISHED' || res.h == null) { if (resEl) resEl.innerHTML = ''; return; }
-        if (resEl) resEl.textContent = res.h + '–' + res.a;
-        const tipH = parseInt(hEl?.value);
-        const tipA = parseInt(aEl?.value);
-        if (isNaN(tipH) || isNaN(tipA)) return;
-        const exact = tipH === res.h && tipA === res.a;
-        const correct = outcome(tipH, tipA) === outcome(res.h, res.a);
-        if (exact) {
-            row.classList.add('m-x');
-            if (hEl) hEl.classList.add('gi-x');
-            if (aEl) aEl.classList.add('gi-x');
-        } else if (correct) {
-            row.classList.add('m-ok');
-            if (hEl) hEl.classList.add('gi-ok');
-            if (aEl) aEl.classList.add('gi-ok');
-        } else {
-            row.classList.add('m-ng');
-            if (hEl) hEl.classList.add('gi-ng');
-            if (aEl) aEl.classList.add('gi-ng');
-        }
-        const pts = calcPoints(tipH, tipA, res.h, res.a);
-        total += pts;
-        scoredCount++;
-        if (ptEl) {
-            ptEl.textContent = pts + 'p';
-            ptEl.style.color = exact ? '#1a8a3c' : correct ? '#2e7d32' : pts > 0 ? '#e67e00' : '#e53935';
-        }
-    });
-    const totalEl = document.getElementById('total-pts');
-    if (totalEl) {
-        if (scoredCount > 0) {
-            totalEl.style.display = '';
-            totalEl.textContent = total + 'p';
-            totalEl.style.color = '';
-            totalEl.style.background = '';
-        } else {
+        const h   = parseInt(document.getElementById('h'+i)?.value);
+        const a   = parseInt(document.getElementById('a'+i)?.value);
+        const res = document.getElementById('res' + i);
+        if (!row || !res) return;
+        if (!r || r.h == null) { row.className = 'm'; res.textContent = ''; res.className = 'mres'; return; }
+        const isLive = r.status !== 'FINISHED';
+        res.className = 'mres' + (isLive ? ' mres-live' : '');
+        res.innerHTML = isLive
+            ? `<span class="live-dot"></span>${r.h}–${r.a} LIVE`
+            : `${r.h}–${r.a} FT`;
+        if (!isNaN(h) && !isNaN(a)) {
+            const p = calcPoints(h, a, r.h, r.a);
+            const ptEl = document.getElementById('pt' + i);
+            if (ptEl) ptEl.textContent = p + 'p';
+            const hEl = document.getElementById('h'+i), aEl = document.getElementById('a'+i);
+            if (h===r.h&&a===r.a)      { row.className='m m-x'; [hEl,aEl].forEach(e=>{if(e){e.classList.remove('gi-ok','gi-ng');e.classList.add('gi-x');}}); }
+            else if (outcome(h,a)===outcome(r.h,r.a)) { row.className='m m-ok'; [hEl,aEl].forEach(e=>{if(e){e.classList.remove('gi-x','gi-ng');e.classList.add('gi-ok');}}); }
+            else { row.className='m m-ng'; [hEl,aEl].forEach(e=>{if(e){e.classList.remove('gi-x','gi-ok');e.classList.add('gi-ng');}}); }
+        } else { row.className = 'm'; }
+        let total = 0, counted = 0;
+        M.forEach((_, j) => {
+            const rj = RESULTS[j]; if(!rj||rj.h==null||rj.status!=='FINISHED') return;
+            const hj=parseInt(document.getElementById('h'+j)?.value), aj=parseInt(document.getElementById('a'+j)?.value);
+            if(isNaN(hj)||isNaN(aj)) return;
+            total += calcPoints(hj,aj,rj.h,rj.a); counted++;
+        });
+        const totalEl = document.getElementById('total-pts');
+        if (totalEl && counted > 0) {
+            totalEl.textContent = total + ' poäng';
+            totalEl.style.display = 'inline-block';
+            totalEl.style.background = total > counted * 15 ? '#d4edda' : '';
+        } else if (totalEl) {
             totalEl.style.display = 'none';
         }
-    }
+    });
 }
 
 // ─── ROUTING ─────────────────────────────────────────────────────────────────
 const _params   = new URLSearchParams(location.search);
 const kupongId  = _params.get('k');
 const groupId   = _params.get('g') || null;
-
-// All data lives under a group. Root URL (no ?g=) uses this default group.
 const DEFAULT_GROUP = 'joakim';
 
-// Must be declared here (before first synchronous use) to avoid TDZ
-let importQueue    = [];
-let importGen      = 0;
-let importDropReady = false;
+function col(name)     { return db.collection('groups').doc(groupId||DEFAULT_GROUP).collection(name); }
+function metaDoc(name) { return db.collection('groups').doc(groupId||DEFAULT_GROUP).collection('meta').doc(name); }
+function resultsDoc()  { return db.collection('meta').doc('results'); }
 
-// Firestore helpers — always namespace data under a group
-function col(name) {
-    return db.collection('groups').doc(groupId || DEFAULT_GROUP).collection(name);
-}
-function metaDoc(name) {
-    return db.collection('groups').doc(groupId || DEFAULT_GROUP).collection('meta').doc(name);
-}
-// Results are always global (same tournament, shared across groups)
-function resultsDoc() { return db.collection('meta').doc('results'); }
-
-// Set tabell links to include group param
 const _tabelHref = 'tabell/' + (groupId ? '?g=' + encodeURIComponent(groupId) : '');
-document.querySelectorAll('a[href="tabell/"]').forEach(a => a.href = _tabelHref);
+document.querySelectorAll('#pub-tabell-link,#part-tabell-link').forEach(a => a.href = _tabelHref);
+if (groupId) {
+    const adminLink = document.getElementById('pub-admin-link');
+    if (adminLink) adminLink.href = 'admin/?g=' + encodeURIComponent(groupId);
+    const backLink = document.getElementById('part-back-link');
+    if (backLink) backLink.href = './?g=' + encodeURIComponent(groupId);
+}
 
 if (kupongId) {
-    document.getElementById('admin-page').style.display = 'none';
     document.getElementById('participant-page').style.display = 'block';
     initParticipant();
 } else {
-    if (!db) document.getElementById('fb-notice').style.display = 'block';
-    initAdmin();
+    document.getElementById('public-page').style.display = 'block';
+    initPublic();
 }
 
-// ─── ADMIN ────────────────────────────────────────────────────────────────────
+// ─── PUBLIC ───────────────────────────────────────────────────────────────────
 
-async function initAdmin() {
-    if (sessionStorage.getItem('adminAuth_' + (groupId || DEFAULT_GROUP)) === 'ok') {
-        showAdminContent();
-    } else {
-        await checkFirstRun();
-    }
-}
-
-async function cfgSnapshots() {
-    const [g, r] = await Promise.all([
-        metaDoc('config').get().catch(() => null),
-        db.collection('meta').doc('config').get().catch(() => null)
-    ]);
-    return { g, r };
-}
-
-async function checkFirstRun() {
-    if (!db) return;
-    try {
-        const { g, r } = await cfgSnapshots();
-        const hasPw = (g?.exists && g.data()?.adminPassword) ||
-                      (r?.exists && r.data()?.adminPassword);
-        if (!hasPw) {
-            document.getElementById('pw-input').placeholder = 'Välj ett adminlösenord';
-            document.getElementById('pw-btn').textContent = 'Spara lösenord';
-            document.getElementById('pw-btn').onclick = savePassword;
-        }
-        if (g?.data()?.registrationClosed) {
-            document.getElementById('create-card').style.display = 'none';
-        }
-    } catch(e) {}
-}
-
-async function tryLogin() {
-    const pw = document.getElementById('pw-input').value;
-    if (!pw) return;
-    if (!db) { showAdminContent(); return; }
-    const errEl = document.getElementById('pw-err');
-    try {
-        const { g, r } = await cfgSnapshots();
-        const gPw = g?.exists ? g.data()?.adminPassword : null;
-        const rPw = r?.exists ? r.data()?.adminPassword : null;
-        if ((gPw && gPw === pw) || (rPw && rPw === pw)) {
-            sessionStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
-            errEl.style.display = 'none';
-            showAdminContent();
-        } else {
-            errEl.textContent = 'Fel lösenord – försök igen';
-            errEl.style.display = 'block';
-        }
-    } catch(e) {
-        errEl.textContent = 'Fel: ' + e.message;
-        errEl.style.display = 'block';
-    }
-}
-
-async function savePassword() {
-    const pw = document.getElementById('pw-input').value.trim();
-    if (!pw) return;
-    try {
-        await metaDoc('config').set({ adminPassword: pw }, { merge: true });
-        sessionStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
-        showAdminContent();
-    } catch(e) {}
-}
-
-async function fetchAndStore(key) {
-    const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches';
-    const resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl), {
-        headers: { 'X-Auth-Token': key }
-    });
-    if (!resp.ok) throw new Error('API-fel ' + resp.status + (resp.status === 403 ? ' — kontrollera API-nyckeln' : ''));
-    const data = await resp.json();
-    const results = mapApiToResults(data.matches || []);
-    if (db) await resultsDoc().set({ results, updatedAt: new Date().toISOString() });
-    return { results, matches: data.matches || [] };
-}
-
-async function fetchResults(silent = false) {
-    const key = document.getElementById('fd-key').value.trim();
-    const st = document.getElementById('fetch-st');
-    if (!key) { if (!silent) st.textContent = 'Ange en API-nyckel'; return; }
-    if (!silent) st.textContent = 'Hämtar...';
-    try {
-        if (db) await metaDoc('config').set({ fdApiKey: key }, { merge: true });
-        const { results, matches } = await fetchAndStore(key);
-        RESULTS = results;
-        const n = results.filter(r => r && r.status === 'FINISHED').length;
-        const unmatched = matches.filter(am =>
-            !M.some(m => teamMatches(am.homeTeam?.name, m.h) && teamMatches(am.awayTeam?.name, m.b))
-        ).map(am => (am.homeTeam?.name || '?') + ' v ' + (am.awayTeam?.name || '?'));
-        st.textContent = `✓ ${n} avslutade matcher` + (unmatched.length ? ` | Omatchade: ${unmatched.join(', ')}` : '');
-    } catch(e) {
-        if (!silent) st.textContent = 'Fel: ' + (e.message || e);
-    }
-}
-
-async function fetchResultsShared() {
-    const st = document.getElementById('fetch-st');
-    st.textContent = 'Hämtar...';
-    try {
-        const [gSnap, rSnap] = await Promise.all([
-            db.collection('groups').doc(DEFAULT_GROUP).collection('meta').doc('config').get().catch(() => null),
-            db.collection('meta').doc('config').get().catch(() => null)
-        ]);
-        const key = gSnap?.data()?.fdApiKey || rSnap?.data()?.fdApiKey;
-        if (!key) { st.textContent = 'Ingen API-nyckel konfigurerad av administratören'; return; }
-        const { results } = await fetchAndStore(key);
-        RESULTS = results;
-        const n = results.filter(r => r && r.status === 'FINISHED').length;
-        st.textContent = `✓ ${n} avslutade matcher — ${new Date().toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}`;
-    } catch(e) {
-        st.textContent = 'Fel: ' + (e.message || e);
-    }
-}
-
-async function startResultsRefresh() {
-    if (!db) return;
-    try {
-        const snap = await metaDoc('config').get();
-        const key = snap.exists && snap.data().fdApiKey;
-        if (!key) return;
-
-        const schedule = async () => {
-            const wait = msUntilNextActivity();
-            if (wait > 0) { setTimeout(schedule, Math.min(wait, 3600000)); return; }
-            const interval = anyMatchLive() ? 60000 : 300000;
-            try {
-                const rsnap = await resultsDoc().get();
-                const age = rsnap.exists ? Date.now() - new Date(rsnap.data().updatedAt).getTime() : Infinity;
-                if (age > interval * 0.8) await fetchAndStore(key);
-            } catch(e) { console.warn('results refresh:', e.message); }
-            setTimeout(schedule, interval);
-        };
-
-        schedule();
-    } catch(e) { console.warn('startResultsRefresh:', e.message); }
-}
-
-function updateRegistrationUI(closed) {
-    const regSection = document.getElementById('registration-section');
-    const createCard = document.getElementById('create-card');
-    const importCard = document.getElementById('import-card');
-    const btn        = document.getElementById('registration-btn');
-    const status     = document.getElementById('registration-status');
-    regSection.style.display = 'flex';
-    if (closed) {
-        createCard.style.display = 'none';
-        importCard.style.display = 'none';
-        status.textContent = 'Anmälan stängd';
-        btn.textContent = 'Öppna anmälan';
-        btn.style.cssText = 'border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;background:#1a9e3f;color:#fff';
-    } else {
-        createCard.style.display = '';
-        importCard.style.display = 'block';
-        status.textContent = 'Anmälan öppen';
-        btn.textContent = 'Stäng anmälan';
-        btn.style.cssText = 'border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;background:#e53935;color:#fff';
-    }
-}
-
-async function toggleRegistration() {
-    const btn = document.getElementById('registration-btn');
-    const nowClosed = btn.textContent === 'Stäng anmälan';
-    try {
-        await metaDoc('config').set({ registrationClosed: nowClosed }, { merge: true });
-        updateRegistrationUI(nowClosed);
-    } catch(e) { console.warn('toggleRegistration:', e.message); }
-}
-
-async function showAdminContent() {
-    document.getElementById('pw-section').style.display = 'none';
-    document.getElementById('links-list').style.display = 'block';
-    document.getElementById('logout-btn').style.display = 'block';
-
-    document.getElementById('create-btn').textContent = 'Skapa länk';
-    initImportDrop();
-    document.getElementById('results-card').style.display = 'block';
-    if (groupId) {
-        document.getElementById('results-root').style.display = 'none';
-        document.getElementById('results-group').style.display = 'block';
-    }
-    document.getElementById('tabell-card').style.display = 'block';
-    if (!groupId) document.getElementById('group-admin-card').style.display = 'block';
-    if (!db) { document.getElementById('fb-notice').style.display = 'block'; return; }
-    try {
-        const rsnap = await resultsDoc().get();
-        if (rsnap.exists && rsnap.data().updatedAt) {
-            const d = new Date(rsnap.data().updatedAt).toLocaleString('sv-SE');
-            document.getElementById('fetch-st').textContent = 'Senast hämtat: ' + d;
-        }
-        const [cfgSnap, rootCfgSnap] = await Promise.all([
-            metaDoc('config').get().catch(() => null),
-            db.collection('meta').doc('config').get().catch(() => null)
-        ]);
-        const apiKey = cfgSnap?.data()?.fdApiKey || rootCfgSnap?.data()?.fdApiKey;
-        if (!groupId && apiKey) {
-            document.getElementById('fd-key').value = apiKey;
-            startAutoFetch();
-        }
-        updateRegistrationUI(!!(cfgSnap?.data()?.registrationClosed));
-        const tsnap = await metaDoc('tabell').get();
-        if (tsnap.exists) {
-            if (tsnap.data().comment) document.getElementById('tabell-comment').value = tsnap.data().comment;
-            if (tsnap.data().updatedAt) {
-                const d = new Date(tsnap.data().updatedAt).toLocaleString('sv-SE');
-                document.getElementById('tabell-st').textContent = 'Senast uppdaterad: ' + d;
-            }
-        }
-    } catch(e) {}
-    startAdminListener();
-}
-
-let autoFetchStarted = false;
-
-function startAutoFetch() {
-    if (autoFetchStarted) return;
-    autoFetchStarted = true;
-    const schedule = () => {
-        const wait = msUntilNextActivity();
-        const interval = wait > 0 ? Math.min(wait, 3600000) : anyMatchLive() ? 60000 : 300000;
-        setTimeout(async () => {
-            if (wait === 0 && document.getElementById('fd-key')?.value.trim()) await fetchResults(true);
-            schedule();
-        }, interval);
-    };
-    schedule();
-}
-
-async function updateTabell() {
-    const btn = document.getElementById('tabell-btn');
-    const st  = document.getElementById('tabell-st');
-    const comment = document.getElementById('tabell-comment').value.trim();
-    btn.disabled = true;
-    st.textContent = 'Beräknar...';
-    try {
-        const [rSnap, kSnap] = await Promise.all([
-            resultsDoc().get(),
-            col('kuponger').get()
-        ]);
-        const results  = rSnap.exists ? (rSnap.data().results || []) : [];
-        const kuponger = kSnap.docs.map(d => ({ ...d.data() }));
-
-        const nextMatchItems = M.map((m, i) => ({ m, i }))
-            .filter(({ i }) => { const r = results[i]; return !r || r.status !== 'FINISHED'; })
-            .sort((a, b) => matchStartUtc(a.m) - matchStartUtc(b.m))
-            .slice(0, 3);
-
-        const nextMatches = nextMatchItems.map(({ m }) => ({
-            label: m.h + ' – ' + m.b,
-            time: m.t + ' ' + m.d.replace(/^\w+ /, '')
-        }));
-
-        const rows = kuponger.map(k => {
-            const tips  = k.tips || [];
-            const alias = k.alias || k.namn || k.label || 'Namnlös';
-            let pts = 0, exact = 0, correct = 0, wrong = 0;
-            results.forEach((res, i) => {
-                if (!res || res.status !== 'FINISHED' || res.h == null) return;
-                const t  = tips[i];
-                const th = parseInt(typeof t === 'object' ? t.h : (t?.[0] ?? ''));
-                const ta = parseInt(typeof t === 'object' ? t.a : (t?.[1] ?? ''));
-                if (isNaN(th) || isNaN(ta)) return;
-                const p = calcPoints(th, ta, res.h, res.a);
-                pts += p;
-                if (th === res.h && ta === res.a) exact++;
-                else if (outcome(th, ta) === outcome(res.h, res.a)) correct++;
-                else wrong++;
-            });
-            const nextTips = nextMatchItems.map(({ i }) => {
-                const t = tips[i];
-                const h = t ? (typeof t === 'object' ? t.h : t[0]) : '';
-                const a = t ? (typeof t === 'object' ? t.a : t[1]) : '';
-                return (h !== '' && h != null && a !== '' && a != null) ? `${h}–${a}` : '–';
-            });
-            return { alias, pts, exact, correct, wrong, nextTips };
-        }).sort((a, b) => b.pts - a.pts || b.exact - a.exact || b.correct - a.correct);
-
-        const updatedAt = new Date().toISOString();
-        await metaDoc('tabell').set({ rows, nextMatches, comment, updatedAt });
-        const d = new Date(updatedAt).toLocaleString('sv-SE');
-        st.textContent = `✓ Tabell uppdaterad ${d} (${rows.length} deltagare)`;
-    } catch(e) {
-        st.textContent = 'Fel: ' + e.message;
-    }
-    btn.disabled = false;
-}
-
-async function resetGroupPassword() {
-    const gid = document.getElementById('reset-gid').value.trim();
-    const st  = document.getElementById('reset-gid-st');
-    if (!gid) { st.textContent = 'Ange ett grupp-ID'; return; }
-    if (!confirm(`Nollställ lösenordet för grupp "${gid}"? De kan sedan välja ett nytt.`)) return;
-    try {
-        await db.collection('groups').doc(gid).collection('meta').doc('config')
-            .update({ adminPassword: firebase.firestore.FieldValue.delete() });
-        st.textContent = `✓ Lösenord nollställt för "${gid}"`;
-        document.getElementById('reset-gid').value = '';
-    } catch(e) {
-        st.textContent = 'Fel: ' + (e.message || e);
-    }
-}
-
-function logout() {
-    autoFetchStarted = false;
-    sessionStorage.removeItem('adminAuth_' + (groupId || DEFAULT_GROUP));
-    location.reload();
-}
-
-function startAdminListener() {
-    if (db) {
-        col('kuponger').onSnapshot(
-            snapshot => {
-                const docs = snapshot.docs.map(d => ({
-                    id: d.id,
-                    name: d.data().label || d.data().namn || '',
-                    createdAt: d.data().createdAt || '',
-                    klar: !!d.data().klar
-                })).sort((a, b) => a.createdAt < b.createdAt ? 1 : -1);
-                renderLinksFromData(docs);
-            },
-            err => {
-                document.getElementById('links-list').innerHTML =
-                    `<p style="color:#e53935;font-size:.85rem">⚠ Kunde inte läsa kuponger: ${err.message}<br><span style="color:#888">Kontrollera att Firestore-reglerna inte gått ut i Firebase-konsolen.</span></p>`;
-            }
-        );
+async function initPublic() {
+    if (!db) {
+        document.getElementById('create-card').style.display = 'block';
         return;
     }
-    renderLinksList();
+    try {
+        const snap = await metaDoc('config').get();
+        const closed = !!(snap.exists && snap.data()?.registrationClosed);
+        if (closed) {
+            document.getElementById('closed-card').style.display = 'block';
+        } else {
+            document.getElementById('create-card').style.display = 'block';
+        }
+    } catch(e) {
+        document.getElementById('create-card').style.display = 'block';
+    }
 }
 
-function genId() {
-    return Math.random().toString(36).substr(2, 8);
-}
+function genId() { return Math.random().toString(36).substr(2, 8); }
 
 async function createLink() {
     const name = document.getElementById('new-name').value.trim();
-    const id = genId();
-    const url = location.origin + location.pathname + '?k=' + id + '&g=' + encodeURIComponent(groupId || DEFAULT_GROUP);
-
+    const id   = genId();
+    const url  = location.origin + location.pathname + '?k=' + id + '&g=' + encodeURIComponent(groupId || DEFAULT_GROUP);
     if (db) {
         try {
             await col('kuponger').doc(id).set({
@@ -890,218 +377,7 @@ async function createLink() {
             });
         } catch(e) {}
     }
-
-    const entry = { id, name, createdAt: new Date().toISOString() };
-    const links = JSON.parse(localStorage.getItem('vmt26_links') || '[]');
-    links.push(entry);
-    localStorage.setItem('vmt26_links', JSON.stringify(links));
-
-    if (db) {
-        try {
-            await metaDoc('links').set(
-                { list: firebase.firestore.FieldValue.arrayUnion(entry) },
-                { merge: true }
-            );
-        } catch(e) {}
-    }
-
-    const isAdmin = sessionStorage.getItem('adminAuth_' + (groupId || DEFAULT_GROUP)) === 'ok';
-
-    if (!isAdmin) {
-        location.href = url;
-        return;
-    }
-
-    const nameLabel = name ? ` för ${name}` : '';
-    document.getElementById('created-result').innerHTML = `
-        <div class="created-box" style="position:relative">
-            <button onclick="document.getElementById('created-result').innerHTML=''" style="position:absolute;top:6px;right:6px;background:none;border:none;font-size:1rem;cursor:pointer;color:#888;line-height:1">✕</button>
-            <div class="cl">✓ Kupong skapad${nameLabel}</div>
-            <a class="cu" href="${url}" style="display:block;word-break:break-all">${url}</a>
-            <div class="ub">
-                <button class="bcp" onclick="copyText('${url}')">Kopiera länk</button>
-                ${navigator.share ? `<button class="bsh" onclick="doShare('${url}','${name}')">Dela</button>` : ''}
-            </div>
-        </div>`;
-
-    document.getElementById('new-name').value = '';
-    if (!db) renderLinksList();
-}
-
-function renderLinksFromData(links) {
-    const el = document.getElementById('links-list');
-    if (!links.length) { el.innerHTML = '<p style="color:#888;font-size:.9rem">Inga kuponger ännu.</p>'; return; }
-    el.innerHTML = links.map(l => {
-        const url = location.origin + location.pathname + '?k=' + l.id + (groupId ? '&g=' + encodeURIComponent(groupId) : '');
-        const date = l.createdAt ? new Date(l.createdAt).toLocaleDateString('sv-SE') : '';
-        const check = l.klar ? ' <span style="color:#22a349;font-size:1rem">✓</span>' : '';
-        return `<div class="link-row">
-            <div class="link-info">
-                <div class="link-name">${l.name || 'Namnlös kupong'}${check}</div>
-                <div class="link-date">Skapad ${date}</div>
-            </div>
-            <div class="link-actions">
-                <button class="la-cp" onclick="copyText('${url}')">Kopiera</button>
-                <a class="la-open" href="${url}">Öppna</a>
-                <button class="la-del" ${l.klar ? 'disabled title="Avmarkera klar för att ta bort"' : `onclick="deleteKupong('${l.id}','${l.name}')"`} style="${l.klar ? 'opacity:.3;cursor:not-allowed' : ''}">✕</button>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-async function deleteKupong(id, name) {
-    if (!confirm(`Ta bort kupong för "${name || id}"?`)) return;
-    if (db) await col('kuponger').doc(id).delete().catch(() => {});
-}
-
-function parseWorkbook(arrayBuffer) {
-    const wb = XLSX.read(arrayBuffer, { type: 'array' });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const namn  = ws['K1']?.v?.toString().trim() || '';
-    const alias = ws['K2']?.v?.toString().trim() || '';
-    const email = ws['K3']?.v?.toString().trim() || '';
-    const tips  = M.map(m => ({ h: ws['G'+m.r]?.v?.toString() ?? '', a: ws['H'+m.r]?.v?.toString() ?? '' }));
-    const filled = tips.filter(t => t.h !== '' && t.a !== '').length;
-    return { namn, alias, email, tips, filled };
-}
-
-function initImportDrop() {
-    if (importDropReady) return;
-    importDropReady = true;
-    const zone = document.getElementById('import-drop');
-    if (!zone) return;
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.background = '#eaf2ff'; });
-    zone.addEventListener('dragleave', () => { zone.style.background = '#f8faff'; });
-    zone.addEventListener('drop', e => {
-        e.preventDefault();
-        zone.style.background = '#f8faff';
-        importExcels({ files: e.dataTransfer.files });
-    });
-}
-
-function importExcels(input) {
-    if (typeof XLSX === 'undefined') { alert('SheetJS inte laddat, försök igen om ett ögonblick'); return; }
-    const gen = ++importGen;
-    importQueue = [];
-    const list = document.getElementById('import-list');
-    list.innerHTML = '';
-    const files = Array.from(input.files);
-    if (!files.length) return;
-    let done = 0;
-    files.forEach((file, idx) => {
-        const reader = new FileReader();
-        reader.onload = e => {
-            if (gen !== importGen) return; // stale batch, discard
-            try {
-                const data = parseWorkbook(e.target.result);
-                importQueue[idx] = data;
-                const row = document.createElement('div');
-                row.id = 'ir' + idx;
-                row.style.cssText = 'display:flex;align-items:center;gap:10px;background:#f8f8f8;border-radius:8px;padding:10px 12px;font-size:.85rem';
-                row.innerHTML = `
-                    <div style="flex:1;min-width:0">
-                        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${data.namn || '<span style="color:#aaa">Inget namn</span>'}</div>
-                        <div style="color:#888;font-size:.75rem">${data.filled}/72 matcher • ${file.name}</div>
-                    </div>
-                    <div id="ir-st${idx}" style="font-size:.8rem;color:#22a349;white-space:nowrap"></div>
-                    <button onclick="removeImport(${idx})" class="ir-del">✕</button>`;
-                list.appendChild(row);
-            } catch(err) {
-                const row = document.createElement('div');
-                row.style.cssText = 'color:#e53935;font-size:.8rem;padding:8px';
-                row.textContent = '✕ ' + file.name + ': ' + err.message;
-                list.appendChild(row);
-            }
-            if (++done === files.length) {
-                const btn = document.getElementById('import-save-btn');
-                btn.style.display = importQueue.filter(Boolean).length ? 'block' : 'none';
-                btn.textContent = `Spara ${importQueue.filter(Boolean).length} kupong${importQueue.filter(Boolean).length !== 1 ? 'er' : ''}`;
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    });
-}
-
-function removeImport(idx) {
-    importQueue[idx] = null;
-    document.getElementById('ir' + idx)?.remove();
-    const remaining = importQueue.filter(Boolean).length;
-    const btn = document.getElementById('import-save-btn');
-    if (remaining === 0) { btn.style.display = 'none'; return; }
-    btn.textContent = `Spara ${remaining} kupong${remaining !== 1 ? 'er' : ''}`;
-}
-
-async function saveAllImported() {
-    const btn = document.getElementById('import-save-btn');
-    btn.disabled = true;
-    btn.textContent = 'Sparar...';
-    let saved = 0;
-    for (let i = 0; i < importQueue.length; i++) {
-        const d = importQueue[i];
-        if (!d) continue;
-        const stEl = document.getElementById('ir-st' + i);
-        try {
-            await col('kuponger').doc(genId()).set({
-                label: d.namn, namn: d.namn, alias: d.alias,
-                email: d.email, tips: d.tips, klar: true, createdAt: new Date().toISOString()
-            });
-            if (stEl) stEl.textContent = '✓ Sparad';
-            saved++;
-        } catch(e) {
-            if (stEl) { stEl.textContent = '✕ Fel'; stEl.style.color = '#e53935'; }
-        }
-    }
-    const total = importQueue.filter(Boolean).length;
-    document.getElementById('import-file').value = '';
-    importQueue = [];
-    if (saved === 0 && total > 0) {
-        btn.disabled = false;
-        btn.textContent = 'Försök igen';
-        toast('⚠ Inga kuponger sparades — kontrollera Firestore-reglerna');
-        return;
-    }
-    document.getElementById('import-list').innerHTML = '';
-    btn.style.display = 'none';
-    toast(`✓ ${saved} kupong${saved !== 1 ? 'er' : ''} sparade`);
-}
-
-function renderLinksList() {
-    const links = JSON.parse(localStorage.getItem('vmt26_links') || '[]');
-    const el = document.getElementById('links-list');
-    if (!links.length) { el.innerHTML = '<p style="color:#888;font-size:.9rem">Inga kuponger ännu.</p>'; return; }
-    el.innerHTML = [...links].reverse().map(l => {
-        const url = location.origin + location.pathname + '?k=' + l.id + (groupId ? '&g=' + encodeURIComponent(groupId) : '');
-        const date = new Date(l.createdAt).toLocaleDateString('sv-SE');
-        return `<div class="link-row">
-            <div class="link-info">
-                <div class="link-name">${l.name || 'Namnlös kupong'} <span id="lock-${l.id}"></span></div>
-                <div class="link-date">Skapad ${date}</div>
-            </div>
-            <div class="link-actions">
-                <button class="la-cp" onclick="copyText('${url}')">Kopiera</button>
-                <a class="la-open" href="${url}">Öppna</a>
-            </div>
-        </div>`;
-    }).join('');
-
-    if (db) {
-        [...links].forEach(l => {
-            col('kuponger').doc(l.id).onSnapshot(snap => {
-                const lockEl = document.getElementById('lock-' + l.id);
-                if (lockEl) lockEl.innerHTML = snap.exists && snap.data()?.klar ? ' <span style="color:#22a349;font-size:1rem">✓</span>' : '';
-            });
-        });
-    }
-}
-
-function copyText(text) {
-    navigator.clipboard.writeText(text)
-        .then(() => toast('Länken är kopierad!'))
-        .catch(() => toast('Länken är kopierad!'));
-}
-
-function doShare(url, name) {
-    navigator.share({ title: `VM 2026 tips${name ? ' – ' + name : ''}`, url }).catch(() => {});
+    location.href = url;
 }
 
 // ─── PARTICIPANT ──────────────────────────────────────────────────────────────
@@ -1147,7 +423,30 @@ function initParticipant() {
     try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
 }
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
+async function startResultsRefresh() {
+    if (!db) return;
+    try {
+        const snap = await metaDoc('config').get();
+        const key = snap.exists && snap.data().fdApiKey;
+        if (!key) return;
+        const schedule = async () => {
+            const wait = msUntilNextActivity();
+            if (wait > 0) { setTimeout(schedule, Math.min(wait, 3600000)); return; }
+            const interval = anyMatchLive() ? 60000 : 300000;
+            try {
+                const rsnap = await resultsDoc().get();
+                const age = rsnap.exists ? Date.now() - new Date(rsnap.data().updatedAt).getTime() : Infinity;
+                if (age > interval * 0.8) {
+                    const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches';
+                    const resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl), { headers: { 'X-Auth-Token': key } });
+                    if (resp.ok) { const data = await resp.json(); const results = mapApiToResults(data.matches||[]); await resultsDoc().set({ results, updatedAt: new Date().toISOString() }); }
+                }
+            } catch(e) {}
+            setTimeout(schedule, interval);
+        };
+        schedule();
+    } catch(e) {}
+}
 
 function getState() {
     return {
@@ -1196,21 +495,15 @@ async function cloudSave() {
     } catch(e) { setSaveSt(''); }
 }
 
-function setSaveSt(msg) {
-    const el = document.getElementById('save-st');
-    if (el) el.textContent = msg;
-}
+function setSaveSt(msg) { const el=document.getElementById('save-st'); if(el) el.textContent=msg; }
 
 function updateProg() {
     let n = 0;
     M.forEach((_, i) => {
-        if (document.getElementById('h'+i)?.value !== '' &&
-            document.getElementById('a'+i)?.value !== '') n++;
+        if (document.getElementById('h'+i)?.value !== '' && document.getElementById('a'+i)?.value !== '') n++;
     });
     document.getElementById('prog').textContent = n + ' / 72';
 }
-
-// ─── RENDER ───────────────────────────────────────────────────────────────────
 
 function render() {
     const el = document.getElementById('ml');
@@ -1224,8 +517,7 @@ function render() {
         }
         n++;
         const d = document.createElement('div');
-        d.className = 'm';
-        d.id = 'mr' + i;
+        d.className = 'm'; d.id = 'mr' + i;
         d.innerHTML = `<div class="mn"><b>#${n}</b>${m.t}<span class="mres" id="res${i}"></span></div>
             <div class="th">${m.h}</div>
             <div class="sc">
@@ -1274,24 +566,7 @@ function dlXlsx() {
     toast('Excel-filen laddas ner...');
 }
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
-
-function toast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('on');
-    setTimeout(() => el.classList.remove('on'), 2500);
-}
-
-function closeModal() { document.getElementById('modal').classList.remove('on'); }
-function copyModalUrl() {
-    const v = document.getElementById('ubox').value;
-    navigator.clipboard.writeText(v)
-        .catch(() => { const b = document.getElementById('ubox'); b.select(); document.execCommand('copy'); })
-        .finally(() => { toast('Länken är kopierad!'); closeModal(); });
-}
-
-document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),2500); }
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
