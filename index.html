@@ -549,7 +549,11 @@ async function initAdmin() {
 async function checkFirstRun() {
     if (!db) return;
     try {
-        const snap = await metaDoc('config').get();
+        let snap = await metaDoc('config').get();
+        // Fallback: legacy password may still be at root meta/config before migration
+        if (!snap.exists || !snap.data().adminPassword) {
+            snap = await db.collection('meta').doc('config').get();
+        }
         if (!snap.exists || !snap.data().adminPassword) {
             document.getElementById('pw-input').placeholder = 'Välj ett adminlösenord';
             document.getElementById('pw-btn').textContent = 'Spara lösenord';
@@ -563,7 +567,11 @@ async function tryLogin() {
     if (!pw) return;
     if (!db) { showAdminContent(); return; }
     try {
-        const snap = await metaDoc('config').get();
+        let snap = await metaDoc('config').get();
+        // Fallback: legacy password may still be at root meta/config before migration
+        if (!snap.exists || !snap.data().adminPassword) {
+            snap = await db.collection('meta').doc('config').get();
+        }
         if (snap.exists && snap.data().adminPassword === pw) {
             sessionStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
             document.getElementById('pw-err').style.display = 'none';

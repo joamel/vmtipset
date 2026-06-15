@@ -30,6 +30,13 @@ async function migrate() {
         console.log(`✓ ${kupSnap.size} kuponger migrerade till groups/${TARGET_GROUP}/kuponger/`);
     }
 
+    // ── meta/config (password + API key) ─────────────────────────────────────
+    const cSnap = await db.collection('meta').doc('config').get();
+    if (cSnap.exists) {
+        await db.collection('groups').doc(TARGET_GROUP).collection('meta').doc('config').set(cSnap.data());
+        console.log(`✓ meta/config migrerat (lösenord + API-nyckel)`);
+    }
+
     // ── meta/tabell ───────────────────────────────────────────────────────────
     const tSnap = await db.collection('meta').doc('tabell').get();
     if (tSnap.exists) {
@@ -48,9 +55,7 @@ async function migrate() {
 
     console.log('\nKlart!');
     console.log('meta/results lämnades kvar (global resurs).');
-    console.log('meta/config lämnades kvar — logga in i adminläget och spara API-nyckeln igen');
-    console.log('så att den skrivs till rätt plats (groups/' + TARGET_GROUP + '/meta/config).');
-    console.log('\nRoot-datan finns kvar som backup. Ta bort den manuellt i Firebase-konsolen när du är nöjd.');
+    console.log('Root-datan finns kvar som backup. Ta bort den manuellt i Firebase-konsolen när du är nöjd.');
 }
 
 migrate()
