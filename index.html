@@ -35,7 +35,7 @@
 
         .gh { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #b06500; padding: 11px 0 3px; border-top: 1px solid #eee; margin-top: 2px; }
         .gh:first-child { border-top: none; padding-top: 0; }
-        .m { display: grid; grid-template-columns: 40px 1fr auto 1fr; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #f2f2f2; border-left: 3px solid transparent; padding-left: 4px; transition: border-color .2s, background .2s; }
+        .m { display: grid; grid-template-columns: 40px 1fr auto 1fr 34px; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid #f2f2f2; border-left: 3px solid transparent; padding-left: 4px; transition: border-color .2s, background .2s; }
         .m:last-child { border-bottom: none; }
         .m-x  { background: #f0fbf3; }
         .m-ok { background: #f0fbf3; }
@@ -58,6 +58,7 @@
         .gi::-webkit-inner-spin-button, .gi::-webkit-outer-spin-button { -webkit-appearance: none; }
         .gi { -moz-appearance: textfield; }
         .dash { color: #ccc; font-size: .85rem; }
+        .mp { font-size: .7rem; font-weight: 700; text-align: center; white-space: nowrap; color: #aaa; }
 
         #bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e0e0e0; padding: 9px 10px; display: flex; gap: 8px; justify-content: center; box-shadow: 0 -2px 10px rgba(0,0,0,.07); }
         .btn { padding: 11px 0; border: none; border-radius: 8px; font-size: .93rem; font-weight: 700; cursor: pointer; flex: 1; max-width: 230px; }
@@ -195,7 +196,10 @@
             </div>
         </div>
         <div class="card">
-            <div class="ct">Matcher <span style="font-weight:400;color:#999;font-size:.9em;text-transform:none;letter-spacing:0">— hemma / borta mål</span></div>
+            <div class="ct" style="display:flex;justify-content:space-between;align-items:center">
+                <span>Matcher <span style="font-weight:400;color:#999;font-size:.9em;text-transform:none;letter-spacing:0">— hemma / borta mål</span></span>
+                <span id="total-pts" style="display:none;font-size:.85rem;font-weight:700;text-transform:none;letter-spacing:0;color:#1a8a3c;background:#f0fbf3;padding:3px 10px;border-radius:20px"></span>
+            </div>
             <div id="ml"></div>
         </div>
     </div>
@@ -382,6 +386,14 @@ function teamMatches(apiName, swe) {
 
 function outcome(h, a) { return h > a ? 'H' : a > h ? 'A' : 'D'; }
 
+function calcPoints(tipH, tipA, resH, resA) {
+    if (tipH === resH && tipA === resA) return 25;
+    const diffH = Math.abs(tipH - resH);
+    const diffA = Math.abs(tipA - resA);
+    const correct = outcome(tipH, tipA) === outcome(resH, resA);
+    return Math.max(0, correct ? 20 - diffH - diffA : 10 - diffH - diffA);
+}
+
 function mapApiToResults(apiMatches) {
     const res = new Array(M.length).fill(null);
     apiMatches.forEach(am => {
@@ -393,15 +405,18 @@ function mapApiToResults(apiMatches) {
 }
 
 function updateMatchColors() {
+    let total = 0, scoredCount = 0;
     RESULTS.forEach((res, i) => {
         const row = document.getElementById('mr' + i);
         const resEl = document.getElementById('res' + i);
+        const ptEl = document.getElementById('pt' + i);
         if (!row) return;
         row.classList.remove('m-x', 'm-ok', 'm-ng');
         const hEl = document.getElementById('h' + i);
         const aEl = document.getElementById('a' + i);
         if (hEl) hEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
         if (aEl) aEl.classList.remove('gi-x', 'gi-ok', 'gi-ng');
+        if (ptEl) ptEl.textContent = '';
         if (!res) { if (resEl) resEl.innerHTML = ''; return; }
         const live = ['IN_PLAY','PAUSED','HALF_TIME','EXTRA_TIME','PENALTY_SHOOTOUT'].includes(res.status);
         if (live) {
@@ -433,7 +448,25 @@ function updateMatchColors() {
             if (hEl) hEl.classList.add('gi-ng');
             if (aEl) aEl.classList.add('gi-ng');
         }
+        const pts = calcPoints(tipH, tipA, res.h, res.a);
+        total += pts;
+        scoredCount++;
+        if (ptEl) {
+            ptEl.textContent = pts + 'p';
+            ptEl.style.color = exact ? '#1a8a3c' : correct ? '#2e7d32' : pts > 0 ? '#e67e00' : '#e53935';
+        }
     });
+    const totalEl = document.getElementById('total-pts');
+    if (totalEl) {
+        if (scoredCount > 0) {
+            totalEl.style.display = '';
+            totalEl.textContent = total + 'p';
+            totalEl.style.color = '';
+            totalEl.style.background = '';
+        } else {
+            totalEl.style.display = 'none';
+        }
+    }
 }
 
 // ─── ROUTING ─────────────────────────────────────────────────────────────────
@@ -962,7 +995,8 @@ function render() {
                 <span class="dash">–</span>
                 <input class="gi" type="number" min="0" max="20" id="a${i}" placeholder="?">
             </div>
-            <div class="ta">${m.b}</div>`;
+            <div class="ta">${m.b}</div>
+            <div class="mp" id="pt${i}"></div>`;
         el.appendChild(d);
     });
     M.forEach((_, i) => {
