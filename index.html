@@ -426,8 +426,11 @@ function initParticipant() {
 async function startResultsRefresh() {
     if (!db) return;
     try {
-        const snap = await metaDoc('config').get();
-        const key = snap.exists && snap.data().fdApiKey;
+        const [gSnap, rSnap] = await Promise.all([
+            metaDoc('config').get().catch(() => null),
+            db.collection('meta').doc('config').get().catch(() => null)
+        ]);
+        const key = gSnap?.data()?.fdApiKey || rSnap?.data()?.fdApiKey;
         if (!key) return;
         const schedule = async () => {
             const wait = msUntilNextActivity();
