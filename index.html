@@ -92,6 +92,8 @@
         .la-open { background: #003087; color: #fff; }
         .la-del { background: #fee2e2; color: #c00; }
         .la-del:hover { background: #fca5a5; }
+        .ir-del { background: none; border: 1.5px solid #ddd; color: #ccc; border-radius: 50%; width: 26px; height: 26px; font-size: .7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color .15s, color .15s; flex-shrink: 0; padding: 0; }
+        .ir-del:hover { border-color: #e53935; color: #e53935; }
         #pw-err { color: #c00; font-size: .82rem; margin-top: 6px; display: none; }
 
         .notice { padding: 10px 12px; background: #fff8e1; border-left: 3px solid #f59e0b; border-radius: 6px; font-size: .82rem; color: #7a5c00; margin-bottom: 11px; }
@@ -139,10 +141,7 @@
             <div id="created-result"></div>
         </div>
         <div class="card" id="links-card">
-            <div class="ct" style="display:flex;justify-content:space-between;align-items:center">
-                <span>Alla kuponger</span>
-                <button id="logout-btn2" onclick="logout()" style="display:none;background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;color:#555">Logga ut</button>
-            </div>
+            <div class="ct">Alla kuponger</div>
             <div id="pw-section">
                 <form onsubmit="tryLogin();return false">
                     <div class="fi" style="margin-bottom:8px">
@@ -655,7 +654,7 @@ async function showAdminContent() {
     document.getElementById('pw-section').style.display = 'none';
     document.getElementById('links-list').style.display = 'block';
     document.getElementById('logout-btn').style.display = 'block';
-    document.getElementById('logout-btn2').style.display = 'block';
+
     document.getElementById('create-btn').textContent = 'Skapa länk';
     document.getElementById('import-card').style.display = 'block';
     initImportDrop();
@@ -939,7 +938,7 @@ function importExcels(input) {
                         <div style="color:#888;font-size:.75rem">${data.filled}/72 matcher • ${file.name}</div>
                     </div>
                     <div id="ir-st${idx}" style="font-size:.8rem;color:#22a349;white-space:nowrap"></div>
-                    <button onclick="removeImport(${idx})" class="la-del">✕</button>`;
+                    <button onclick="removeImport(${idx})" class="ir-del">✕</button>`;
                 list.appendChild(row);
             } catch(err) {
                 const row = document.createElement('div');
@@ -986,9 +985,11 @@ async function saveAllImported() {
             if (stEl) { stEl.textContent = '✕ Fel'; stEl.style.color = '#e53935'; }
         }
     }
-    btn.textContent = `✓ ${saved} kupong${saved !== 1 ? 'er' : ''} sparade`;
     document.getElementById('import-file').value = '';
+    document.getElementById('import-list').innerHTML = '';
+    btn.style.display = 'none';
     importQueue = [];
+    toast(`✓ ${saved} kupong${saved !== 1 ? 'er' : ''} sparade`);
 }
 
 function renderLinksList() {
