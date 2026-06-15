@@ -550,15 +550,21 @@ async function initAdmin() {
     }
 }
 
+async function cfgSnapshots() {
+    const [g, r] = await Promise.all([
+        metaDoc('config').get().catch(() => null),
+        db.collection('meta').doc('config').get().catch(() => null)
+    ]);
+    return { g, r };
+}
+
 async function checkFirstRun() {
     if (!db) return;
     try {
-        let snap = await metaDoc('config').get();
-        // Fallback: legacy password may still be at root meta/config before migration
-        if (!snap.exists || !snap.data().adminPassword) {
-            snap = await db.collection('meta').doc('config').get();
-        }
-        if (!snap.exists || !snap.data().adminPassword) {
+        const { g, r } = await cfgSnapshots();
+        const hasPw = (g?.exists && g.data()?.adminPassword) ||
+                      (r?.exists && r.data()?.adminPassword);
+        if (!hasPw) {
             document.getElementById('pw-input').placeholder = 'Välj ett adminlösenord';
             document.getElementById('pw-btn').textContent = 'Spara lösenord';
             document.getElementById('pw-btn').onclick = savePassword;
@@ -571,19 +577,19 @@ async function tryLogin() {
     if (!pw) return;
     if (!db) { showAdminContent(); return; }
     try {
-        let snap = await metaDoc('config').get();
-        // Fallback: legacy password may still be at root meta/config before migration
-        if (!snap.exists || !snap.data().adminPassword) {
-            snap = await db.collection('meta').doc('config').get();
-        }
-        if (snap.exists && snap.data().adminPassword === pw) {
+        const { g, r } = await cfgSnapshots();
+        const gPw = g?.exists ? g.data()?.adminPassword : null;
+        const rPw = r?.exists ? r.data()?.adminPassword : null;
+        if ((gPw && gPw === pw) || (rPw && rPw === pw)) {
             sessionStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
             document.getElementById('pw-err').style.display = 'none';
             showAdminContent();
         } else {
             document.getElementById('pw-err').style.display = 'block';
         }
-    } catch(e) {}
+    } catch(e) {
+        document.getElementById('pw-err').style.display = 'block';
+    }
 }
 
 async function savePassword() {
