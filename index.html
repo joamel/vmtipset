@@ -586,7 +586,7 @@ async function tryLogin() {
             errEl.style.display = 'none';
             showAdminContent();
         } else {
-            errEl.textContent = `Fel lösenord — g:${g?.exists ? 'ok' : 'saknas'} r:${r?.exists ? 'ok' : 'saknas'} gPw:${gPw ? 'satt' : 'ej satt'} rPw:${rPw ? 'satt' : 'ej satt'}`;
+            errEl.textContent = 'Fel lösenord – försök igen';
             errEl.style.display = 'block';
         }
     } catch(e) {
@@ -640,8 +640,11 @@ async function fetchResultsShared() {
     const st = document.getElementById('fetch-st');
     st.textContent = 'Hämtar...';
     try {
-        const cfgSnap = await db.collection('groups').doc(DEFAULT_GROUP).collection('meta').doc('config').get();
-        const key = cfgSnap.exists && cfgSnap.data().fdApiKey;
+        const [gSnap, rSnap] = await Promise.all([
+            db.collection('groups').doc(DEFAULT_GROUP).collection('meta').doc('config').get().catch(() => null),
+            db.collection('meta').doc('config').get().catch(() => null)
+        ]);
+        const key = gSnap?.data()?.fdApiKey || rSnap?.data()?.fdApiKey;
         if (!key) { st.textContent = 'Ingen API-nyckel konfigurerad av administratören'; return; }
         const { results } = await fetchAndStore(key);
         RESULTS = results;
@@ -727,12 +730,16 @@ async function showAdminContent() {
             const d = new Date(rsnap.data().updatedAt).toLocaleString('sv-SE');
             document.getElementById('fetch-st').textContent = 'Senast hämtat: ' + d;
         }
-        const cfgSnap = await metaDoc('config').get();
-        if (!groupId && cfgSnap.exists && cfgSnap.data().fdApiKey) {
-            document.getElementById('fd-key').value = cfgSnap.data().fdApiKey;
+        const [cfgSnap, rootCfgSnap] = await Promise.all([
+            metaDoc('config').get().catch(() => null),
+            db.collection('meta').doc('config').get().catch(() => null)
+        ]);
+        const apiKey = cfgSnap?.data()?.fdApiKey || rootCfgSnap?.data()?.fdApiKey;
+        if (!groupId && apiKey) {
+            document.getElementById('fd-key').value = apiKey;
             startAutoFetch();
         }
-        updateRegistrationUI(cfgSnap.exists && !!cfgSnap.data().registrationClosed);
+        updateRegistrationUI(!!(cfgSnap?.data()?.registrationClosed));
         const tsnap = await metaDoc('tabell').get();
         if (tsnap.exists) {
             if (tsnap.data().comment) document.getElementById('tabell-comment').value = tsnap.data().comment;
