@@ -322,6 +322,19 @@ function anyMatchLive() {
     return M.some(m => { const s = matchStartUtc(m); return now >= s && now < s + 2.5 * 3600000; });
 }
 
+function msUntilNextActivity() {
+    const now = Date.now();
+    let nearest = Infinity;
+    for (const m of M) {
+        const s = matchStartUtc(m);
+        const end = s + 2.5 * 3600000;
+        const cooldown = end + 3600000; // 1h after match for FINISHED to propagate
+        if (now < s) nearest = Math.min(nearest, s - now);           // before match
+        else if (now < cooldown) return 0;                            // active or cooling down
+    }
+    return nearest; // ms until next match starts
+}
+
 // ─── RESULTAT ────────────────────────────────────────────────────────────────
 let RESULTS = [];
 
@@ -511,8 +524,9 @@ async function startResultsRefresh() {
         if (!key) return;
 
         const schedule = async () => {
-            const live = anyMatchLive();
-            const interval = live ? 60000 : 300000;
+            const wait = msUntilNextActivity();
+            if (wait > 0) { setTimeout(schedule, Math.min(wait, 3600000)); return; }
+            const interval = anyMatchLive() ? 60000 : 300000;
             try {
                 const rsnap = await db.collection('meta').doc('results').get();
                 const age = rsnap.exists ? Date.now() - new Date(rsnap.data().updatedAt).getTime() : Infinity;
@@ -554,9 +568,10 @@ function startAutoFetch() {
     if (autoFetchStarted) return;
     autoFetchStarted = true;
     const schedule = () => {
-        const interval = anyMatchLive() ? 60000 : 300000;
+        const wait = msUntilNextActivity();
+        const interval = wait > 0 ? Math.min(wait, 3600000) : anyMatchLive() ? 60000 : 300000;
         setTimeout(async () => {
-            if (document.getElementById('fd-key')?.value.trim()) await fetchResults(true);
+            if (wait === 0 && document.getElementById('fd-key')?.value.trim()) await fetchResults(true);
             schedule();
         }, interval);
     };

@@ -2,7 +2,7 @@ name: Hämta matchresultat
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # var 5:e minut
+    - cron: '0 3 * * *'    # en gång per dygn (03:00 UTC) som backup
   workflow_dispatch:        # möjlighet att köra manuellt från GitHub
 
 jobs:
