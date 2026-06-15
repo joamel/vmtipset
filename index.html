@@ -569,6 +569,9 @@ async function checkFirstRun() {
             document.getElementById('pw-btn').textContent = 'Spara lösenord';
             document.getElementById('pw-btn').onclick = savePassword;
         }
+        if (g?.data()?.registrationClosed) {
+            document.getElementById('create-card').style.display = 'none';
+        }
     } catch(e) {}
 }
 
