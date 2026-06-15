@@ -150,6 +150,15 @@
             </div>
             <div id="links-list" style="display:none"></div>
         </div>
+        <div class="card" id="import-card" style="display:none">
+            <div class="ct">Importera kupong från Excel</div>
+            <p style="font-size:.85rem;color:#666;margin:0 0 10px">Ladda upp en ifylld kupong i samma Excel-format som laddas ner.</p>
+            <div class="fi">
+                <label>Excel-fil (.xlsx)</label>
+                <input type="file" id="import-file" accept=".xlsx,.xls" onchange="importExcel(this)">
+            </div>
+            <div id="import-preview" style="margin-top:10px"></div>
+        </div>
         <div class="card" id="results-card" style="display:none">
             <div class="ct">Automatisk rättning</div>
             <p style="font-size:.85rem;color:#666;margin:0 0 10px">Hämtar resultat från football-data.org och rättar alla kuponger live. <a href="https://www.football-data.org/client/register" target="_blank" style="color:#003087">Skaffa gratis API-nyckel</a></p>
@@ -545,6 +554,7 @@ async function showAdminContent() {
     document.getElementById('logout-btn').style.display = 'block';
     document.getElementById('logout-btn2').style.display = 'block';
     document.getElementById('create-btn').textContent = 'Skapa länk';
+    document.getElementById('import-card').style.display = 'block';
     document.getElementById('results-card').style.display = 'block';
     if (!db) { document.getElementById('fb-notice').style.display = 'block'; return; }
     try {
@@ -679,6 +689,52 @@ function renderLinksFromData(links) {
 async function deleteKupong(id, name) {
     if (!confirm(`Ta bort kupong för "${name || id}"?`)) return;
     if (db) await db.collection('kuponger').doc(id).delete().catch(() => {});
+}
+
+function importExcel(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            if (typeof XLSX === 'undefined') { alert('SheetJS inte laddat än, försök igen om ett ögonblick'); return; }
+            const wb = XLSX.read(e.target.result, { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const namn  = ws['K1']?.v?.toString().trim() || '';
+            const alias = ws['K2']?.v?.toString().trim() || '';
+            const email = ws['K3']?.v?.toString().trim() || '';
+            const tips  = M.map(m => ({
+                h: ws['G' + m.r]?.v?.toString() ?? '',
+                a: ws['H' + m.r]?.v?.toString() ?? ''
+            }));
+            const filled = tips.filter(t => t.h !== '' && t.a !== '').length;
+            const prev = document.getElementById('import-preview');
+            prev.innerHTML = `
+                <div style="background:#f5f5f5;border-radius:8px;padding:12px;font-size:.85rem">
+                    <div><b>Namn:</b> ${namn || '—'}</div>
+                    <div><b>Alias:</b> ${alias || '—'}</div>
+                    <div><b>E-post:</b> ${email || '—'}</div>
+                    <div style="margin-top:6px"><b>${filled} / 72</b> matcher ifyllda</div>
+                </div>
+                <button class="create-btn" style="margin-top:10px" onclick="saveImportedKupong(${JSON.stringify({namn,alias,email,tips}).replace(/"/g,'&quot;')})">Spara kupong</button>`;
+        } catch(e) { alert('Kunde inte läsa filen: ' + e.message); }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+async function saveImportedKupong(data) {
+    const id = genId();
+    if (db) {
+        try {
+            await db.collection('kuponger').doc(id).set({
+                label: data.namn, namn: data.namn, alias: data.alias,
+                email: data.email, tips: data.tips,
+                createdAt: new Date().toISOString()
+            });
+            document.getElementById('import-preview').innerHTML = '<div style="color:#22a349;margin-top:8px">✓ Kupong sparad</div>';
+            document.getElementById('import-file').value = '';
+        } catch(e) { alert('Fel vid sparning: ' + e.message); }
+    }
 }
 
 function renderLinksList() {
