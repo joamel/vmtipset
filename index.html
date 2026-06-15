@@ -789,15 +789,21 @@ function logout() {
 
 function startAdminListener() {
     if (db) {
-        col('kuponger').onSnapshot(snapshot => {
-            const docs = snapshot.docs.map(d => ({
-                id: d.id,
-                name: d.data().label || d.data().namn || '',
-                createdAt: d.data().createdAt || '',
-                klar: !!d.data().klar
-            })).sort((a, b) => a.createdAt < b.createdAt ? 1 : -1);
-            renderLinksFromData(docs);
-        });
+        col('kuponger').onSnapshot(
+            snapshot => {
+                const docs = snapshot.docs.map(d => ({
+                    id: d.id,
+                    name: d.data().label || d.data().namn || '',
+                    createdAt: d.data().createdAt || '',
+                    klar: !!d.data().klar
+                })).sort((a, b) => a.createdAt < b.createdAt ? 1 : -1);
+                renderLinksFromData(docs);
+            },
+            err => {
+                document.getElementById('links-list').innerHTML =
+                    `<p style="color:#e53935;font-size:.85rem">⚠ Kunde inte läsa kuponger: ${err.message}<br><span style="color:#888">Kontrollera att Firestore-reglerna inte gått ut i Firebase-konsolen.</span></p>`;
+            }
+        );
         return;
     }
     renderLinksList();
@@ -985,10 +991,17 @@ async function saveAllImported() {
             if (stEl) { stEl.textContent = '✕ Fel'; stEl.style.color = '#e53935'; }
         }
     }
+    const total = importQueue.filter(Boolean).length;
     document.getElementById('import-file').value = '';
+    importQueue = [];
+    if (saved === 0 && total > 0) {
+        btn.disabled = false;
+        btn.textContent = 'Försök igen';
+        toast('⚠ Inga kuponger sparades — kontrollera Firestore-reglerna');
+        return;
+    }
     document.getElementById('import-list').innerHTML = '';
     btn.style.display = 'none';
-    importQueue = [];
     toast(`✓ ${saved} kupong${saved !== 1 ? 'er' : ''} sparade`);
 }
 
