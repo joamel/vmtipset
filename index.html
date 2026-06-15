@@ -132,7 +132,7 @@
         <div id="fb-notice" class="notice" style="display:none">
             Firebase är inte konfigurerat — kuponger sparas bara lokalt på din enhet.
         </div>
-        <div class="card">
+        <div class="card" id="create-card">
             <div class="ct">Skapa kupong</div>
             <form autocomplete="off" onsubmit="createLink();return false">
                 <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Anna Andersson" autocomplete="off"></div>
@@ -142,6 +142,10 @@
         </div>
         <div class="card" id="links-card">
             <div class="ct">Alla kuponger</div>
+            <div id="registration-section" style="display:none;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;padding:7px 12px;background:#f5f5f5;border-radius:8px">
+                <span id="registration-status" style="font-size:.83rem;color:#555"></span>
+                <button id="registration-btn" onclick="toggleRegistration()" style="border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap"></button>
+            </div>
             <div id="pw-section">
                 <form onsubmit="tryLogin();return false">
                     <div class="fi" style="margin-bottom:8px">
@@ -662,13 +666,43 @@ async function startResultsRefresh() {
     } catch(e) { console.warn('startResultsRefresh:', e.message); }
 }
 
+function updateRegistrationUI(closed) {
+    const regSection = document.getElementById('registration-section');
+    const createCard = document.getElementById('create-card');
+    const importCard = document.getElementById('import-card');
+    const btn        = document.getElementById('registration-btn');
+    const status     = document.getElementById('registration-status');
+    regSection.style.display = 'flex';
+    if (closed) {
+        createCard.style.display = 'none';
+        importCard.style.display = 'none';
+        status.textContent = 'Anmälan stängd';
+        btn.textContent = 'Öppna anmälan';
+        btn.style.cssText = 'border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;background:#1a9e3f;color:#fff';
+    } else {
+        createCard.style.display = '';
+        importCard.style.display = 'block';
+        status.textContent = 'Anmälan öppen';
+        btn.textContent = 'Stäng anmälan';
+        btn.style.cssText = 'border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;background:#e53935;color:#fff';
+    }
+}
+
+async function toggleRegistration() {
+    const btn = document.getElementById('registration-btn');
+    const nowClosed = btn.textContent === 'Stäng anmälan';
+    try {
+        await metaDoc('config').set({ registrationClosed: nowClosed }, { merge: true });
+        updateRegistrationUI(nowClosed);
+    } catch(e) { console.warn('toggleRegistration:', e.message); }
+}
+
 async function showAdminContent() {
     document.getElementById('pw-section').style.display = 'none';
     document.getElementById('links-list').style.display = 'block';
     document.getElementById('logout-btn').style.display = 'block';
 
     document.getElementById('create-btn').textContent = 'Skapa länk';
-    document.getElementById('import-card').style.display = 'block';
     initImportDrop();
     document.getElementById('results-card').style.display = 'block';
     if (groupId) {
@@ -684,13 +718,12 @@ async function showAdminContent() {
             const d = new Date(rsnap.data().updatedAt).toLocaleString('sv-SE');
             document.getElementById('fetch-st').textContent = 'Senast hämtat: ' + d;
         }
-        if (!groupId) {
-            const snap = await metaDoc('config').get();
-            if (snap.exists && snap.data().fdApiKey) {
-                document.getElementById('fd-key').value = snap.data().fdApiKey;
-                startAutoFetch();
-            }
+        const cfgSnap = await metaDoc('config').get();
+        if (!groupId && cfgSnap.exists && cfgSnap.data().fdApiKey) {
+            document.getElementById('fd-key').value = cfgSnap.data().fdApiKey;
+            startAutoFetch();
         }
+        updateRegistrationUI(cfgSnap.exists && !!cfgSnap.data().registrationClosed);
         const tsnap = await metaDoc('tabell').get();
         if (tsnap.exists) {
             if (tsnap.data().comment) document.getElementById('tabell-comment').value = tsnap.data().comment;
