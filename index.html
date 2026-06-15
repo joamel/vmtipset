@@ -151,13 +151,15 @@
             <div id="links-list" style="display:none"></div>
         </div>
         <div class="card" id="import-card" style="display:none">
-            <div class="ct">Importera kupong från Excel</div>
-            <p style="font-size:.85rem;color:#666;margin:0 0 10px">Ladda upp en ifylld kupong i samma Excel-format som laddas ner.</p>
-            <div class="fi">
-                <label>Excel-fil (.xlsx)</label>
-                <input type="file" id="import-file" accept=".xlsx,.xls" onchange="importExcel(this)">
-            </div>
-            <div id="import-preview" style="margin-top:10px"></div>
+            <div class="ct">Importera kuponger</div>
+            <label id="import-drop" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:2px dashed #c8d8f0;border-radius:10px;padding:20px;cursor:pointer;background:#f8faff;transition:background .15s">
+                <span style="font-size:1.6rem">📂</span>
+                <span style="font-size:.85rem;color:#555">Välj en eller flera Excel-filer</span>
+                <span style="font-size:.75rem;color:#aaa">.xlsx / .xls</span>
+                <input type="file" id="import-file" accept=".xlsx,.xls" multiple style="display:none" onchange="importExcels(this)">
+            </label>
+            <div id="import-list" style="margin-top:12px;display:flex;flex-direction:column;gap:6px"></div>
+            <button id="import-save-btn" class="create-btn" onclick="saveAllImported()" style="display:none;margin-top:4px">Spara alla kuponger</button>
         </div>
         <div class="card" id="results-card" style="display:none">
             <div class="ct">Automatisk rättning</div>
@@ -691,50 +693,81 @@ async function deleteKupong(id, name) {
     if (db) await db.collection('kuponger').doc(id).delete().catch(() => {});
 }
 
-function importExcel(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        try {
-            if (typeof XLSX === 'undefined') { alert('SheetJS inte laddat än, försök igen om ett ögonblick'); return; }
-            const wb = XLSX.read(e.target.result, { type: 'array' });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const namn  = ws['K1']?.v?.toString().trim() || '';
-            const alias = ws['K2']?.v?.toString().trim() || '';
-            const email = ws['K3']?.v?.toString().trim() || '';
-            const tips  = M.map(m => ({
-                h: ws['G' + m.r]?.v?.toString() ?? '',
-                a: ws['H' + m.r]?.v?.toString() ?? ''
-            }));
-            const filled = tips.filter(t => t.h !== '' && t.a !== '').length;
-            const prev = document.getElementById('import-preview');
-            prev.innerHTML = `
-                <div style="background:#f5f5f5;border-radius:8px;padding:12px;font-size:.85rem">
-                    <div><b>Namn:</b> ${namn || '—'}</div>
-                    <div><b>Alias:</b> ${alias || '—'}</div>
-                    <div><b>E-post:</b> ${email || '—'}</div>
-                    <div style="margin-top:6px"><b>${filled} / 72</b> matcher ifyllda</div>
-                </div>
-                <button class="create-btn" style="margin-top:10px" onclick="saveImportedKupong(${JSON.stringify({namn,alias,email,tips}).replace(/"/g,'&quot;')})">Spara kupong</button>`;
-        } catch(e) { alert('Kunde inte läsa filen: ' + e.message); }
-    };
-    reader.readAsArrayBuffer(file);
+let importQueue = [];
+
+function parseWorkbook(arrayBuffer) {
+    const wb = XLSX.read(arrayBuffer, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const namn  = ws['K1']?.v?.toString().trim() || '';
+    const alias = ws['K2']?.v?.toString().trim() || '';
+    const email = ws['K3']?.v?.toString().trim() || '';
+    const tips  = M.map(m => ({ h: ws['G'+m.r]?.v?.toString() ?? '', a: ws['H'+m.r]?.v?.toString() ?? '' }));
+    const filled = tips.filter(t => t.h !== '' && t.a !== '').length;
+    return { namn, alias, email, tips, filled };
 }
 
-async function saveImportedKupong(data) {
-    const id = genId();
-    if (db) {
+function importExcels(input) {
+    if (typeof XLSX === 'undefined') { alert('SheetJS inte laddat, försök igen om ett ögonblick'); return; }
+    importQueue = [];
+    const list = document.getElementById('import-list');
+    list.innerHTML = '';
+    const files = Array.from(input.files);
+    let done = 0;
+    files.forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const data = parseWorkbook(e.target.result);
+                importQueue[idx] = data;
+                const row = document.createElement('div');
+                row.id = 'ir' + idx;
+                row.style.cssText = 'display:flex;align-items:center;gap:10px;background:#f8f8f8;border-radius:8px;padding:10px 12px;font-size:.85rem';
+                row.innerHTML = `
+                    <div style="flex:1;min-width:0">
+                        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${data.namn || '<span style="color:#aaa">Inget namn</span>'}</div>
+                        <div style="color:#888;font-size:.75rem">${data.filled}/72 matcher • ${file.name}</div>
+                    </div>
+                    <div id="ir-st${idx}" style="font-size:.8rem;color:#22a349;white-space:nowrap"></div>`;
+                list.appendChild(row);
+            } catch(err) {
+                const row = document.createElement('div');
+                row.style.cssText = 'color:#e53935;font-size:.8rem;padding:8px';
+                row.textContent = '✕ ' + file.name + ': ' + err.message;
+                list.appendChild(row);
+            }
+            if (++done === files.length) {
+                const btn = document.getElementById('import-save-btn');
+                btn.style.display = importQueue.filter(Boolean).length ? 'block' : 'none';
+                btn.textContent = `Spara ${importQueue.filter(Boolean).length} kupong${importQueue.filter(Boolean).length !== 1 ? 'er' : ''}`;
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+async function saveAllImported() {
+    const btn = document.getElementById('import-save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sparar...';
+    let saved = 0;
+    for (let i = 0; i < importQueue.length; i++) {
+        const d = importQueue[i];
+        if (!d) continue;
+        const stEl = document.getElementById('ir-st' + i);
         try {
-            await db.collection('kuponger').doc(id).set({
-                label: data.namn, namn: data.namn, alias: data.alias,
-                email: data.email, tips: data.tips,
-                createdAt: new Date().toISOString()
+            await db.collection('kuponger').doc(genId()).set({
+                label: d.namn, namn: d.namn, alias: d.alias,
+                email: d.email, tips: d.tips, createdAt: new Date().toISOString()
             });
-            document.getElementById('import-preview').innerHTML = '<div style="color:#22a349;margin-top:8px">✓ Kupong sparad</div>';
-            document.getElementById('import-file').value = '';
-        } catch(e) { alert('Fel vid sparning: ' + e.message); }
+            if (stEl) stEl.textContent = '✓ Sparad';
+            saved++;
+        } catch(e) {
+            if (stEl) { stEl.textContent = '✕ Fel'; stEl.style.color = '#e53935'; }
+        }
     }
+    btn.textContent = `✓ ${saved} kupong${saved !== 1 ? 'er' : ''} sparade`;
+    document.getElementById('import-file').value = '';
+    importQueue = [];
 }
 
 function renderLinksList() {
