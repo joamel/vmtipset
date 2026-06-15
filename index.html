@@ -741,7 +741,8 @@ function importExcels(input) {
                         <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${data.namn || '<span style="color:#aaa">Inget namn</span>'}</div>
                         <div style="color:#888;font-size:.75rem">${data.filled}/72 matcher • ${file.name}</div>
                     </div>
-                    <div id="ir-st${idx}" style="font-size:.8rem;color:#22a349;white-space:nowrap"></div>`;
+                    <div id="ir-st${idx}" style="font-size:.8rem;color:#22a349;white-space:nowrap"></div>
+                    <button onclick="removeImport(${idx})" style="background:none;border:none;font-size:.95rem;cursor:pointer;color:#aaa;padding:0 2px;line-height:1" title="Ta bort">✕</button>`;
                 list.appendChild(row);
             } catch(err) {
                 const row = document.createElement('div');
@@ -757,6 +758,15 @@ function importExcels(input) {
         };
         reader.readAsArrayBuffer(file);
     });
+}
+
+function removeImport(idx) {
+    importQueue[idx] = null;
+    document.getElementById('ir' + idx)?.remove();
+    const remaining = importQueue.filter(Boolean).length;
+    const btn = document.getElementById('import-save-btn');
+    if (remaining === 0) { btn.style.display = 'none'; return; }
+    btn.textContent = `Spara ${remaining} kupong${remaining !== 1 ? 'er' : ''}`;
 }
 
 async function saveAllImported() {
