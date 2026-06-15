@@ -317,6 +317,11 @@ function matchProbablyOver(m) {
     return Date.now() > matchStartUtc(m) + 2.5 * 3600000;
 }
 
+function anyMatchLive() {
+    const now = Date.now();
+    return M.some(m => { const s = matchStartUtc(m); return now >= s && now < s + 2.5 * 3600000; });
+}
+
 // ─── RESULTAT ────────────────────────────────────────────────────────────────
 let RESULTS = [];
 
@@ -505,17 +510,18 @@ async function startResultsRefresh() {
         const key = snap.exists && snap.data().fdApiKey;
         if (!key) return;
 
-        const tryFetch = async () => {
+        const schedule = async () => {
+            const live = anyMatchLive();
+            const interval = live ? 60000 : 300000;
             try {
                 const rsnap = await db.collection('meta').doc('results').get();
                 const age = rsnap.exists ? Date.now() - new Date(rsnap.data().updatedAt).getTime() : Infinity;
-                if (age < 45000) return;
-                await fetchAndStore(key);
+                if (age > interval * 0.8) await fetchAndStore(key);
             } catch(e) { console.warn('results refresh:', e.message); }
+            setTimeout(schedule, interval);
         };
 
-        tryFetch();
-        setInterval(tryFetch, 60000);
+        schedule();
     } catch(e) { console.warn('startResultsRefresh:', e.message); }
 }
 
@@ -542,18 +548,23 @@ async function showAdminContent() {
     startAdminListener();
 }
 
-let autoFetchTimer = null;
-const AUTO_FETCH_INTERVAL = 60 * 1000;
+let autoFetchStarted = false;
 
 function startAutoFetch() {
-    if (autoFetchTimer) return;
-    autoFetchTimer = setInterval(() => {
-        if (document.getElementById('fd-key')?.value.trim()) fetchResults(true);
-    }, AUTO_FETCH_INTERVAL);
+    if (autoFetchStarted) return;
+    autoFetchStarted = true;
+    const schedule = () => {
+        const interval = anyMatchLive() ? 60000 : 300000;
+        setTimeout(async () => {
+            if (document.getElementById('fd-key')?.value.trim()) await fetchResults(true);
+            schedule();
+        }, interval);
+    };
+    schedule();
 }
 
 function logout() {
-    clearInterval(autoFetchTimer);
+    autoFetchStarted = false;
     sessionStorage.removeItem('adminAuth');
     location.reload();
 }
