@@ -526,7 +526,7 @@ if (kupongId) {
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
 
 async function initAdmin() {
-    if (sessionStorage.getItem('adminAuth') === 'ok') {
+    if (sessionStorage.getItem('adminAuth_' + (groupId || '')) === 'ok') {
         showAdminContent();
     } else {
         await checkFirstRun();
@@ -552,7 +552,7 @@ async function tryLogin() {
     try {
         const snap = await metaDoc('config').get();
         if (snap.exists && snap.data().adminPassword === pw) {
-            sessionStorage.setItem('adminAuth', 'ok');
+            sessionStorage.setItem('adminAuth_' + (groupId || ''), 'ok');
             document.getElementById('pw-err').style.display = 'none';
             showAdminContent();
         } else {
@@ -566,7 +566,7 @@ async function savePassword() {
     if (!pw) return;
     try {
         await metaDoc('config').set({ adminPassword: pw }, { merge: true });
-        sessionStorage.setItem('adminAuth', 'ok');
+        sessionStorage.setItem('adminAuth_' + (groupId || ''), 'ok');
         showAdminContent();
     } catch(e) {}
 }
@@ -752,7 +752,7 @@ async function resetGroupPassword() {
 
 function logout() {
     autoFetchStarted = false;
-    sessionStorage.removeItem('adminAuth');
+    sessionStorage.removeItem('adminAuth_' + (groupId || ''));
     location.reload();
 }
 
@@ -804,7 +804,7 @@ async function createLink() {
         } catch(e) {}
     }
 
-    const isAdmin = sessionStorage.getItem('adminAuth') === 'ok';
+    const isAdmin = sessionStorage.getItem('adminAuth_' + (groupId || '')) === 'ok';
 
     if (!isAdmin) {
         location.href = url;
