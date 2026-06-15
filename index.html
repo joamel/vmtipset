@@ -166,12 +166,20 @@
             <button id="import-save-btn" class="create-btn" onclick="saveAllImported()" style="display:none;margin-top:4px">Spara alla kuponger</button>
         </div>
         <div class="card" id="results-card" style="display:none">
-            <div class="ct">Automatisk rättning</div>
-            <p style="font-size:.85rem;color:#666;margin:0 0 10px">Hämtar resultat från football-data.org och rättar alla kuponger live. <a href="https://www.football-data.org/client/register" target="_blank" style="color:#003087">Skaffa gratis API-nyckel</a></p>
-            <form autocomplete="off" onsubmit="fetchResults();return false">
-                <div class="fi"><label>API-nyckel</label><input type="text" id="fd-key" autocomplete="off" placeholder="Klistra in din API-nyckel"></div>
-                <button class="create-btn" type="submit">Hämta resultat nu</button>
-            </form>
+            <div class="ct">Matchresultat</div>
+            <!-- Root admin: API-nyckel + hämta -->
+            <div id="results-root">
+                <p style="font-size:.85rem;color:#666;margin:0 0 10px">Hämtar resultat från football-data.org och rättar alla kuponger live. <a href="https://www.football-data.org/client/register" target="_blank" style="color:#003087">Skaffa gratis API-nyckel</a></p>
+                <form autocomplete="off" onsubmit="fetchResults();return false">
+                    <div class="fi"><label>API-nyckel</label><input type="text" id="fd-key" autocomplete="off" placeholder="Klistra in din API-nyckel"></div>
+                    <button class="create-btn" type="submit">Hämta resultat nu</button>
+                </form>
+            </div>
+            <!-- Grupp-admin: hämta med delad nyckel -->
+            <div id="results-group" style="display:none">
+                <p style="font-size:.85rem;color:#666;margin:0 0 10px">Resultat delas av alla grupper och hämtas automatiskt. Du kan också uppdatera manuellt.</p>
+                <button class="create-btn" onclick="fetchResultsShared()">Hämta senaste resultaten</button>
+            </div>
             <div id="fetch-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
         </div>
         <div class="card" id="tabell-card" style="display:none">
@@ -509,6 +517,8 @@ function metaDoc(name) {
         ? db.collection('groups').doc(groupId).collection('meta').doc(name)
         : db.collection('meta').doc(name);
 }
+// Results are always global (same tournament, shared across groups)
+function resultsDoc() { return db.collection('meta').doc('results'); }
 
 // Set tabell links to include group param
 const _tabelHref = 'tabell/' + (groupId ? '?g=' + encodeURIComponent(groupId) : '');
@@ -579,7 +589,7 @@ async function fetchAndStore(key) {
     if (!resp.ok) throw new Error('API-fel ' + resp.status + (resp.status === 403 ? ' — kontrollera API-nyckeln' : ''));
     const data = await resp.json();
     const results = mapApiToResults(data.matches || []);
-    if (db) await metaDoc('results').set({ results, updatedAt: new Date().toISOString() });
+    if (db) await resultsDoc().set({ results, updatedAt: new Date().toISOString() });
     return { results, matches: data.matches || [] };
 }
 
@@ -602,10 +612,26 @@ async function fetchResults(silent = false) {
     }
 }
 
+async function fetchResultsShared() {
+    const st = document.getElementById('fetch-st');
+    st.textContent = 'Hämtar...';
+    try {
+        const cfgSnap = await db.collection('meta').doc('config').get();
+        const key = cfgSnap.exists && cfgSnap.data().fdApiKey;
+        if (!key) { st.textContent = 'Ingen API-nyckel konfigurerad av administratören'; return; }
+        const { results } = await fetchAndStore(key);
+        RESULTS = results;
+        const n = results.filter(r => r && r.status === 'FINISHED').length;
+        st.textContent = `✓ ${n} avslutade matcher — ${new Date().toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'})}`;
+    } catch(e) {
+        st.textContent = 'Fel: ' + (e.message || e);
+    }
+}
+
 async function startResultsRefresh() {
     if (!db) return;
     try {
-        const snap = await metaDoc('config').get();
+        const snap = await db.collection('meta').doc('config').get();
         const key = snap.exists && snap.data().fdApiKey;
         if (!key) return;
 
@@ -614,7 +640,7 @@ async function startResultsRefresh() {
             if (wait > 0) { setTimeout(schedule, Math.min(wait, 3600000)); return; }
             const interval = anyMatchLive() ? 60000 : 300000;
             try {
-                const rsnap = await metaDoc('results').get();
+                const rsnap = await resultsDoc().get();
                 const age = rsnap.exists ? Date.now() - new Date(rsnap.data().updatedAt).getTime() : Infinity;
                 if (age > interval * 0.8) await fetchAndStore(key);
             } catch(e) { console.warn('results refresh:', e.message); }
@@ -634,19 +660,25 @@ async function showAdminContent() {
     document.getElementById('import-card').style.display = 'block';
     initImportDrop();
     document.getElementById('results-card').style.display = 'block';
+    if (groupId) {
+        document.getElementById('results-root').style.display = 'none';
+        document.getElementById('results-group').style.display = 'block';
+    }
     document.getElementById('tabell-card').style.display = 'block';
     if (!groupId) document.getElementById('group-admin-card').style.display = 'block';
     if (!db) { document.getElementById('fb-notice').style.display = 'block'; return; }
     try {
-        const snap = await metaDoc('config').get();
-        if (snap.exists && snap.data().fdApiKey) {
-            document.getElementById('fd-key').value = snap.data().fdApiKey;
-            const rsnap = await metaDoc('results').get();
-            if (rsnap.exists && rsnap.data().updatedAt) {
-                const d = new Date(rsnap.data().updatedAt).toLocaleString('sv-SE');
-                document.getElementById('fetch-st').textContent = 'Senast hämtat: ' + d;
+        const rsnap = await resultsDoc().get();
+        if (rsnap.exists && rsnap.data().updatedAt) {
+            const d = new Date(rsnap.data().updatedAt).toLocaleString('sv-SE');
+            document.getElementById('fetch-st').textContent = 'Senast hämtat: ' + d;
+        }
+        if (!groupId) {
+            const snap = await metaDoc('config').get();
+            if (snap.exists && snap.data().fdApiKey) {
+                document.getElementById('fd-key').value = snap.data().fdApiKey;
+                startAutoFetch();
             }
-            startAutoFetch();
         }
         const tsnap = await metaDoc('tabell').get();
         if (tsnap.exists) {
@@ -684,7 +716,7 @@ async function updateTabell() {
     st.textContent = 'Beräknar...';
     try {
         const [rSnap, kSnap] = await Promise.all([
-            metaDoc('results').get(),
+            resultsDoc().get(),
             col('kuponger').get()
         ]);
         const results  = rSnap.exists ? (rSnap.data().results || []) : [];
@@ -1026,7 +1058,7 @@ function initParticipant() {
             }, () => {
                 try { applyState(JSON.parse(localStorage.getItem('vmt26_' + kupongId))); } catch(e) {}
             });
-        metaDoc('results').onSnapshot(snap => {
+        resultsDoc().onSnapshot(snap => {
             if (snap.exists) { RESULTS = snap.data().results || []; updateMatchColors(); }
         });
         startResultsRefresh();
