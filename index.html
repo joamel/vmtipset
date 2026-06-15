@@ -886,6 +886,8 @@ async function deleteKupong(id, name) {
 }
 
 let importQueue = [];
+let importGen = 0;
+let importDropReady = false;
 
 function parseWorkbook(arrayBuffer) {
     const wb = XLSX.read(arrayBuffer, { type: 'array' });
@@ -899,6 +901,8 @@ function parseWorkbook(arrayBuffer) {
 }
 
 function initImportDrop() {
+    if (importDropReady) return;
+    importDropReady = true;
     const zone = document.getElementById('import-drop');
     if (!zone) return;
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.background = '#eaf2ff'; });
@@ -906,21 +910,23 @@ function initImportDrop() {
     zone.addEventListener('drop', e => {
         e.preventDefault();
         zone.style.background = '#f8faff';
-        const fakeInput = { files: e.dataTransfer.files };
-        importExcels(fakeInput);
+        importExcels({ files: e.dataTransfer.files });
     });
 }
 
 function importExcels(input) {
     if (typeof XLSX === 'undefined') { alert('SheetJS inte laddat, försök igen om ett ögonblick'); return; }
+    const gen = ++importGen;
     importQueue = [];
     const list = document.getElementById('import-list');
     list.innerHTML = '';
     const files = Array.from(input.files);
+    if (!files.length) return;
     let done = 0;
     files.forEach((file, idx) => {
         const reader = new FileReader();
         reader.onload = e => {
+            if (gen !== importGen) return; // stale batch, discard
             try {
                 const data = parseWorkbook(e.target.result);
                 importQueue[idx] = data;
@@ -972,7 +978,7 @@ async function saveAllImported() {
         try {
             await col('kuponger').doc(genId()).set({
                 label: d.namn, namn: d.namn, alias: d.alias,
-                email: d.email, tips: d.tips, createdAt: new Date().toISOString()
+                email: d.email, tips: d.tips, klar: true, createdAt: new Date().toISOString()
             });
             if (stEl) stEl.textContent = '✓ Sparad';
             saved++;
