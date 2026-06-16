@@ -57,7 +57,6 @@
         <div><h1>VM 2026 Admin</h1><div class="hs">Administrera kuponger och resultat</div></div>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
-        <a id="back-link" href="../" class="hbtn">← Start</a>
         <a id="tabell-link" href="../tabell/" class="hbtn">Tabell</a>
         <button id="logout-btn" onclick="logout()" style="display:none" class="hbtn">Logga ut</button>
     </div>
@@ -288,7 +287,8 @@ function resultsDoc()  { return db.collection('meta').doc('results'); }
 // Update header links to preserve ?g=
 if (groupId) {
     document.getElementById('tabell-link').href = '../tabell/?g=' + encodeURIComponent(groupId);
-    document.getElementById('back-link').href   = '../?g=' + encodeURIComponent(groupId);
+    const bl = document.getElementById('back-link');
+    if (bl) bl.href = '../?g=' + encodeURIComponent(groupId);
 }
 
 initAdmin();
