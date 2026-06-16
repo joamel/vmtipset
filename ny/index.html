@@ -168,7 +168,7 @@ async function handleCreate() {
             });
         }
 
-        sessionStorage.setItem('adminAuth_' + groupId, 'ok');
+        localStorage.setItem('adminAuth_' + groupId, 'ok');
 
         document.getElementById('admin-url-display').textContent = adminUrl;
         document.getElementById('public-url-display').textContent = publicUrl;
