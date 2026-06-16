@@ -303,7 +303,7 @@ async function cfgSnapshots() {
 }
 
 async function initAdmin() {
-    if (sessionStorage.getItem('adminAuth_' + (groupId || DEFAULT_GROUP)) === 'ok') {
+    if (localStorage.getItem('adminAuth_' + (groupId || DEFAULT_GROUP)) === 'ok') {
         showAdminContent();
     } else {
         await checkFirstRun();
@@ -336,7 +336,7 @@ async function tryLogin() {
         const gPw = g?.exists ? g.data()?.adminPassword : null;
         const rPw = r?.exists ? r.data()?.adminPassword : null;
         if ((gPw && gPw === pw) || (rPw && rPw === pw)) {
-            sessionStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
+            localStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
             errEl.style.display = 'none';
             showAdminContent();
         } else {
@@ -354,7 +354,7 @@ async function savePassword() {
     if (!pw) return;
     try {
         await metaDoc('config').set({ adminPassword: pw }, { merge: true });
-        sessionStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
+        localStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
         showAdminContent();
     } catch(e) {}
 }
@@ -530,7 +530,7 @@ async function resetGroupPassword() {
 
 function logout() {
     autoFetchStarted = false;
-    sessionStorage.removeItem('adminAuth_' + (groupId || DEFAULT_GROUP));
+    localStorage.removeItem('adminAuth_' + (groupId || DEFAULT_GROUP));
     location.reload();
 }
 
