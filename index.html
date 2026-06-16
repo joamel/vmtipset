@@ -441,8 +441,8 @@ async function startResultsRefresh() {
                 const rsnap = await resultsDoc().get();
                 const age = rsnap.exists ? Date.now() - new Date(rsnap.data().updatedAt).getTime() : Infinity;
                 if (age > interval * 0.8) {
-                    const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches';
-                    const resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl), { headers: { 'X-Auth-Token': key } });
+                    const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches?_t=' + Date.now();
+                    const resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl), { headers: { 'X-Auth-Token': key }, cache: 'no-store' });
                     if (resp.ok) { const data = await resp.json(); const results = mapApiToResults(data.matches||[]); await resultsDoc().set({ results, updatedAt: new Date().toISOString() }); }
                 }
             } catch(e) {}

@@ -361,8 +361,8 @@ async function savePassword() {
 }
 
 async function fetchAndStore(key) {
-    const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches';
-    const resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl), { headers: { 'X-Auth-Token': key } });
+    const apiUrl = 'https://api.football-data.org/v4/competitions/WC/matches?_t=' + Date.now();
+    const resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl), { headers: { 'X-Auth-Token': key }, cache: 'no-store' });
     if (!resp.ok) throw new Error('API-fel ' + resp.status + (resp.status === 403 ? ' — kontrollera API-nyckeln' : ''));
     const data = await resp.json();
     const results = mapApiToResults(data.matches || []);
