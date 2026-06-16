@@ -594,7 +594,7 @@ function renderLinksFromData(links) {
             <div class="link-actions">
                 <button class="la-cp" onclick="copyText('${url}')">Kopiera</button>
                 <a class="la-open" href="${url}">Öppna</a>
-                <button class="la-del" onclick="deleteKupong('${l.id}','${l.name}')">✕</button>
+                ${l.klar ? '' : `<button class="la-del" onclick="deleteKupong('${l.id}','${l.name}')">✕</button>`}
             </div>
         </div>`;
     }).join('');
