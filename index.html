@@ -125,6 +125,7 @@
             <div id="prog">0 / 72</div>
         </div>
     </header>
+    <div id="countdown-bar" style="display:none;background:#e67e00;color:#fff;text-align:center;padding:7px 14px;font-size:.85rem;font-weight:700;letter-spacing:.02em"></div>
     <div class="wrap">
         <div class="card">
             <div class="ct">Dina uppgifter</div>
@@ -426,6 +427,35 @@ function updateKlarBtn() {
     });
 }
 
+function startCountdown(deadline, existingInterval) {
+    clearInterval(existingInterval);
+    const bar = document.getElementById('countdown-bar');
+    function tick() {
+        const ms = new Date(deadline) - Date.now();
+        if (ms <= 0) {
+            clearInterval(interval);
+            bar.style.display = 'none';
+            lockForm();
+            return;
+        }
+        const s = Math.floor(ms / 1000);
+        const d = Math.floor(s / 86400);
+        const h = Math.floor((s % 86400) / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+        const parts = d > 0
+            ? `${d} dag${d !== 1 ? 'ar' : ''} ${h} tim ${m} min`
+            : h > 0
+                ? `${h} tim ${m} min ${sec} sek`
+                : `${m} min ${sec} sek`;
+        bar.textContent = `⏰ Stänger om ${parts}`;
+        bar.style.display = 'block';
+    }
+    tick();
+    const interval = setInterval(tick, 1000);
+    return interval;
+}
+
 function lockForm() {
     if (document.getElementById('registration-closed-notice')) return;
     const banner = document.createElement('div');
@@ -468,17 +498,18 @@ async function initParticipant() {
         resultsDoc().onSnapshot(snap => {
             if (snap.exists) { RESULTS = snap.data().results || []; updateMatchColors(); }
         });
-        let deadlineTimer = null;
+        let countdownInterval = null;
         metaDoc('config').onSnapshot(snap => {
             if (!snap.exists) return;
             const data = snap.data();
             const deadline = data?.registrationDeadline;
             const isClosed = !!(data?.registrationClosed || (deadline && new Date(deadline) <= new Date()));
-            if (isClosed) lockForm();
-            else if (deadline) {
-                clearTimeout(deadlineTimer);
-                const ms = new Date(deadline) - Date.now();
-                if (ms > 0) deadlineTimer = setTimeout(() => lockForm(), ms);
+            if (isClosed) {
+                clearInterval(countdownInterval);
+                document.getElementById('countdown-bar').style.display = 'none';
+                lockForm();
+            } else if (deadline) {
+                countdownInterval = startCountdown(deadline, countdownInterval);
             }
             const rules = data?.rules;
             const rulesBtn = document.getElementById('rules-btn');
