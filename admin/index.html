@@ -57,7 +57,7 @@
         <div><h1>VM 2026 Admin</h1><div class="hs">Administrera kuponger och resultat</div></div>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
-        <a id="tabell-link" href="../tabell/" class="hbtn">Tabell</a>
+        <a id="tabell-link" href="../tabell/?from=admin" class="hbtn">Tabell</a>
         <button id="logout-btn" onclick="logout()" style="display:none" class="hbtn">Logga ut</button>
     </div>
 </header>
@@ -139,6 +139,14 @@
         </div>
         <button class="create-btn" id="tabell-btn" onclick="updateTabell()">Uppdatera livetabellen</button>
         <div id="tabell-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
+    </div>
+
+    <div class="card" id="rules-card" style="display:none">
+        <div class="ct">Regler</div>
+        <p style="font-size:.85rem;color:#666;margin:0 0 10px">Texten visas för deltagarna under en "Regler"-knapp längst ned i kupongen.</p>
+        <textarea id="rules-text" rows="6" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:.88rem;resize:vertical;font-family:inherit" placeholder="Skriv reglerna här..."></textarea>
+        <button class="create-btn" style="margin-top:10px" onclick="saveRules()">Spara regler</button>
+        <div id="rules-st" style="margin-top:8px;font-size:.85rem;color:#555"></div>
     </div>
 
     <div class="card" id="group-admin-card" style="display:none">
@@ -298,7 +306,7 @@ function resultsDoc()  { return db.collection('meta').doc('results'); }
 
 // Update header links to preserve ?g=
 if (groupId) {
-    document.getElementById('tabell-link').href = '../tabell/?g=' + encodeURIComponent(groupId);
+    document.getElementById('tabell-link').href = '../tabell/?g=' + encodeURIComponent(groupId) + '&from=admin';
     const bl = document.getElementById('back-link');
     if (bl) bl.href = '../?g=' + encodeURIComponent(groupId);
 }
@@ -527,6 +535,7 @@ async function showAdminContent() {
         document.getElementById('results-group').style.display = 'block';
     }
     document.getElementById('tabell-card').style.display = 'block';
+    document.getElementById('rules-card').style.display = 'block';
     if (!groupId) document.getElementById('group-admin-card').style.display = 'block';
     if (!db) { document.getElementById('fb-notice').style.display = 'block'; return; }
     try {
@@ -544,6 +553,7 @@ async function showAdminContent() {
             startAutoFetch();
         }
         updateRegistrationUI(!!(cfgSnap?.data()?.registrationClosed));
+        if (cfgSnap?.data()?.rules) document.getElementById('rules-text').value = cfgSnap.data().rules;
         const tsnap = await metaDoc('tabell').get();
         if (tsnap.exists) {
             if (tsnap.data().comment) document.getElementById('tabell-comment').value = tsnap.data().comment;
@@ -691,9 +701,9 @@ function renderLinksFromData(links) {
         const delBtn = l.klar
             ? `<button class="la-del" style="cursor:default;background:#fce8e8;color:#f4a0a0" disabled>✕</button>`
             : `<button class="la-del" onclick="deleteKupong('${l.id}','${l.name}')">✕</button>`;
-        const excludeBtn = l.excluded
+        const excludeBtn = !registrationClosed ? '' : (l.excluded
             ? `<button class="la-cp" style="font-size:.78rem" onclick="toggleExcluded('${l.id}',false)">Inkludera</button>`
-            : `<button class="la-cp" style="font-size:.78rem;color:#c0392b" onclick="toggleExcluded('${l.id}',true)">Ej med</button>`;
+            : `<button class="la-cp" style="font-size:.78rem;color:#c0392b" onclick="toggleExcluded('${l.id}',true)">Exkludera</button>`);
         return `<div class="link-row" style="${l.excluded ? 'opacity:.45' : ''}">
             <div class="link-info">
                 <div class="link-name">${l.name || 'Namnlös kupong'}${statusBadge}${excludedBadge}</div>
@@ -711,6 +721,16 @@ function renderLinksFromData(links) {
 
 async function toggleExcluded(id, exclude) {
     if (db) await col('kuponger').doc(id).update({ excluded: exclude }).catch(() => {});
+}
+
+async function saveRules() {
+    const st = document.getElementById('rules-st');
+    const rules = document.getElementById('rules-text').value.trim();
+    st.textContent = 'Sparar...';
+    try {
+        await metaDoc('config').set({ rules }, { merge: true });
+        st.textContent = '✓ Regler sparade';
+    } catch(e) { st.textContent = 'Fel: ' + e.message; }
 }
 
 async function deleteKupong(id, name) {

@@ -144,6 +144,7 @@
     </div>
     <div id="bar">
         <button id="klar-btn" class="btn bd" onclick="toggleKlar()">Markera som klar</button>
+        <button id="rules-btn" class="btn" onclick="toggleRulesPopup()" style="display:none;background:#f0f0f0;color:#333;font-size:.82rem;white-space:nowrap">📋 Regler</button>
         <button class="btn bs" onclick="dlXlsx()">Ladda ner VM-kupong</button>
         <button class="btn" onclick="toggleLinkPopup()" id="link-btn" style="background:#f0f0f0;color:#333;max-width:52px;font-size:1.1rem;flex-shrink:0">🔗</button>
     </div>
@@ -152,6 +153,10 @@
         <div style="font-size:.78rem;color:#555;margin-bottom:10px">Kopiera och spara länken om du vill komma tillbaka och ändra ditt tips.</div>
         <div style="font-size:.72rem;word-break:break-all;font-family:monospace;background:#f5f5f5;padding:8px;border-radius:6px;margin-bottom:10px;color:#333" id="link-url"></div>
         <button onclick="copyKupongLink()" style="width:100%;padding:10px;background:#003087;color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer">Kopiera länk</button>
+    </div>
+    <div id="rules-popup" style="display:none;position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.2);padding:16px;width:min(380px,calc(100vw - 20px));z-index:150;max-height:60vh;overflow-y:auto">
+        <div style="font-size:.78rem;font-weight:700;color:#003087;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Regler</div>
+        <div id="rules-content" style="font-size:.88rem;color:#333;white-space:pre-wrap;line-height:1.55"></div>
     </div>
 </div>
 
@@ -417,16 +422,13 @@ function updateKlarBtn() {
 }
 
 function lockForm() {
-    const notice = document.getElementById('registration-closed-notice');
-    if (notice) return;
-    const wrap = document.querySelector('.wrap');
-    if (wrap) {
-        const el = document.createElement('div');
-        el.id = 'registration-closed-notice';
-        el.style.cssText = 'background:#fff8e1;border:1px solid #f9a825;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.85rem;color:#7a5c00;font-weight:600';
-        el.textContent = 'Anmälan är stängd — kupongen kan inte längre redigeras.';
-        wrap.prepend(el);
-    }
+    if (document.getElementById('registration-closed-notice')) return;
+    const banner = document.createElement('div');
+    banner.id = 'registration-closed-notice';
+    banner.style.cssText = 'background:#e53935;color:#fff;text-align:center;padding:9px 14px;font-size:.88rem;font-weight:700;letter-spacing:.02em';
+    banner.textContent = '🔒 Tipset är stängt — kupongen kan inte längre redigeras';
+    const header = document.querySelector('#participant-page header');
+    if (header) header.insertAdjacentElement('afterend', banner);
     document.querySelectorAll('#fn,#fa,#fe,.gi').forEach(el => {
         el.disabled = true;
         el.style.opacity = '0.5';
@@ -462,7 +464,17 @@ async function initParticipant() {
             if (snap.exists) { RESULTS = snap.data().results || []; updateMatchColors(); }
         });
         metaDoc('config').onSnapshot(snap => {
-            if (snap.exists && snap.data()?.registrationClosed) lockForm();
+            if (!snap.exists) return;
+            if (snap.data()?.registrationClosed) lockForm();
+            const rules = snap.data()?.rules;
+            const rulesBtn = document.getElementById('rules-btn');
+            const rulesContent = document.getElementById('rules-content');
+            if (rules && rules.trim()) {
+                rulesContent.textContent = rules.trim();
+                rulesBtn.style.display = '';
+            } else {
+                rulesBtn.style.display = 'none';
+            }
         });
         startResultsRefresh();
         return;
@@ -621,6 +633,7 @@ function toast(msg) { const el=document.getElementById('toast'); el.textContent=
 function toggleLinkPopup() {
     const popup = document.getElementById('link-popup');
     const visible = popup.style.display !== 'none';
+    document.getElementById('rules-popup').style.display = 'none';
     if (!visible) document.getElementById('link-url').textContent = location.href;
     popup.style.display = visible ? 'none' : 'block';
 }
@@ -629,10 +642,19 @@ function copyKupongLink() {
     toast('Länken är kopierad!');
     document.getElementById('link-popup').style.display = 'none';
 }
+function toggleRulesPopup() {
+    const popup = document.getElementById('rules-popup');
+    const visible = popup.style.display !== 'none';
+    document.getElementById('link-popup').style.display = 'none';
+    popup.style.display = visible ? 'none' : 'block';
+}
 document.addEventListener('click', e => {
-    const popup = document.getElementById('link-popup');
-    const btn   = document.getElementById('link-btn');
-    if (popup && !popup.contains(e.target) && e.target !== btn) popup.style.display = 'none';
+    const linkPopup  = document.getElementById('link-popup');
+    const linkBtn    = document.getElementById('link-btn');
+    const rulesPopup = document.getElementById('rules-popup');
+    const rulesBtn   = document.getElementById('rules-btn');
+    if (linkPopup  && !linkPopup.contains(e.target)  && e.target !== linkBtn)  linkPopup.style.display  = 'none';
+    if (rulesPopup && !rulesPopup.contains(e.target) && e.target !== rulesBtn) rulesPopup.style.display = 'none';
 });
 
 if ('serviceWorker' in navigator) {

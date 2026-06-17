@@ -205,15 +205,21 @@ function renderTable(data) {
 }
 
 const DEFAULT_GROUP = 'joakim';
-const _g = new URLSearchParams(location.search).get('g') || null;
+const _params = new URLSearchParams(location.search);
+const _g = _params.get('g') || null;
 
 function metaDoc(name) {
     return db.collection('groups').doc(_g || DEFAULT_GROUP).collection('meta').doc(name);
 }
 
-// Back link: preserve group param
+// Back link: go back to admin if that's where we came from, otherwise public
 const backLink = document.querySelector('a.back-btn');
-if (backLink && _g) backLink.href = '../?g=' + encodeURIComponent(_g);
+const _from = _params.get('from');
+if (_from === 'admin') {
+    backLink.href = '../admin/' + (_g ? '?g=' + encodeURIComponent(_g) : '');
+} else if (_g) {
+    backLink.href = '../?g=' + encodeURIComponent(_g);
+}
 
 metaDoc('tabell').onSnapshot(snap => {
     renderTable(snap.exists ? snap.data() : null);
