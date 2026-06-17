@@ -367,6 +367,10 @@ async function initPublic() {
 function genId() { return Math.random().toString(36).substr(2, 8); }
 
 async function createLink() {
+    if (db) {
+        const snap = await metaDoc('config').get().catch(() => null);
+        if (snap?.exists && snap.data()?.registrationClosed) return;
+    }
     const name = document.getElementById('new-name').value.trim();
     const id   = genId();
     const url  = location.origin + location.pathname + '?k=' + id + '&g=' + encodeURIComponent(groupId || DEFAULT_GROUP);
