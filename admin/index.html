@@ -637,6 +637,7 @@ function startAdminListener() {
 function genId() { return Math.random().toString(36).substr(2, 8); }
 
 async function createLink() {
+    const isAdmin = localStorage.getItem('adminAuth_' + (groupId || DEFAULT_GROUP)) === 'ok';
     const name = document.getElementById('new-name').value.trim();
     const id   = genId();
     const url  = KUPONG_BASE + '?k=' + id + '&g=' + encodeURIComponent(groupId || DEFAULT_GROUP);
@@ -645,6 +646,7 @@ async function createLink() {
             await col('kuponger').doc(id).set({ label: name, namn: name, alias: '', email: '', tips: [], createdAt: new Date().toISOString() });
         } catch(e) {}
     }
+    if (!isAdmin) { location.href = url; return; }
     const entry = { id, name, createdAt: new Date().toISOString() };
     const links = JSON.parse(localStorage.getItem('vmt26_links') || '[]');
     links.push(entry);
