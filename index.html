@@ -365,7 +365,9 @@ async function initPublic() {
     }
     try {
         const snap = await metaDoc('config').get();
-        const closed = !!(snap.exists && snap.data()?.registrationClosed);
+        const data = snap.exists ? snap.data() : {};
+        const deadline = data?.registrationDeadline;
+        const closed = !!(data?.registrationClosed || (deadline && new Date(deadline) <= new Date()));
         if (closed) {
             document.getElementById('closed-card').style.display = 'block';
         } else {
@@ -381,7 +383,9 @@ function genId() { return Math.random().toString(36).substr(2, 8); }
 async function createLink() {
     if (db) {
         const snap = await metaDoc('config').get().catch(() => null);
-        if (snap?.exists && snap.data()?.registrationClosed) return;
+        const data = snap?.data();
+        const deadline = data?.registrationDeadline;
+        if (data?.registrationClosed || (deadline && new Date(deadline) <= new Date())) return;
     }
     const name = document.getElementById('new-name').value.trim();
     if (!name) { document.getElementById('new-name').focus(); return; }
@@ -464,10 +468,19 @@ async function initParticipant() {
         resultsDoc().onSnapshot(snap => {
             if (snap.exists) { RESULTS = snap.data().results || []; updateMatchColors(); }
         });
+        let deadlineTimer = null;
         metaDoc('config').onSnapshot(snap => {
             if (!snap.exists) return;
-            if (snap.data()?.registrationClosed) lockForm();
-            const rules = snap.data()?.rules;
+            const data = snap.data();
+            const deadline = data?.registrationDeadline;
+            const isClosed = !!(data?.registrationClosed || (deadline && new Date(deadline) <= new Date()));
+            if (isClosed) lockForm();
+            else if (deadline) {
+                clearTimeout(deadlineTimer);
+                const ms = new Date(deadline) - Date.now();
+                if (ms > 0) deadlineTimer = setTimeout(() => lockForm(), ms);
+            }
+            const rules = data?.rules;
             const rulesBtn = document.getElementById('rules-btn');
             const rulesContent = document.getElementById('rules-content');
             if (rules && rules.trim()) {

@@ -82,9 +82,18 @@
 
     <div class="card" id="links-card">
         <div class="ct">Alla kuponger</div>
-        <div id="registration-section" style="display:none;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;padding:7px 12px;background:#f5f5f5;border-radius:8px">
-            <span id="registration-status" style="font-size:.83rem;color:#555"></span>
-            <button id="registration-btn" onclick="toggleRegistration()" style="border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap"></button>
+        <div id="registration-section" style="display:none;flex-direction:column;gap:6px;margin-bottom:12px;padding:8px 12px;background:#f5f5f5;border-radius:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                <span id="registration-status" style="font-size:.83rem;color:#555"></span>
+                <button id="registration-btn" onclick="toggleRegistration()" style="border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap"></button>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <label style="font-size:.8rem;color:#666;flex-shrink:0">Deadline:</label>
+                <input type="datetime-local" id="deadline-input" style="font-size:.8rem;padding:3px 7px;border:1px solid #ddd;border-radius:5px;flex:1;min-width:160px">
+                <button onclick="saveDeadline()" style="border:none;border-radius:5px;padding:4px 10px;font-size:.78rem;font-weight:700;cursor:pointer;background:#003087;color:#fff;white-space:nowrap">Spara</button>
+                <button id="deadline-clear-btn" onclick="clearDeadline()" style="display:none;border:none;border-radius:5px;padding:4px 10px;font-size:.78rem;font-weight:700;cursor:pointer;background:#aaa;color:#fff;white-space:nowrap">Ta bort</button>
+            </div>
+            <div id="deadline-st" style="font-size:.78rem;color:#555;display:none"></div>
         </div>
         <div id="pw-section">
             <form onsubmit="tryLogin();return false">
@@ -489,7 +498,7 @@ function startAutoFetch() {
     schedule();
 }
 
-function updateRegistrationUI(closed) {
+function updateRegistrationUI(closed, deadline) {
     registrationClosed = closed;
     if (cachedLinks.length) renderLinksFromData(cachedLinks);
     const regSection = document.getElementById('registration-section');
@@ -497,6 +506,8 @@ function updateRegistrationUI(closed) {
     const importCard = document.getElementById('import-card');
     const btn        = document.getElementById('registration-btn');
     const status     = document.getElementById('registration-status');
+    const dlSt       = document.getElementById('deadline-st');
+    const dlClear    = document.getElementById('deadline-clear-btn');
     regSection.style.display = 'flex';
     if (closed) {
         createCard.style.display = 'none';
@@ -511,15 +522,53 @@ function updateRegistrationUI(closed) {
         btn.textContent = 'Stäng anmälan';
         btn.style.cssText = 'border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;background:#e53935;color:#fff';
     }
+    if (deadline) {
+        const dlDate = new Date(deadline);
+        const localVal = new Date(dlDate.getTime() - dlDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        document.getElementById('deadline-input').value = localVal;
+        dlSt.textContent = 'Stängs automatiskt: ' + dlDate.toLocaleString('sv-SE');
+        dlSt.style.display = 'block';
+        dlClear.style.display = '';
+    } else {
+        document.getElementById('deadline-input').value = '';
+        dlSt.style.display = 'none';
+        dlClear.style.display = 'none';
+    }
 }
 
 async function toggleRegistration() {
     const btn = document.getElementById('registration-btn');
     const nowClosed = btn.textContent === 'Stäng anmälan';
+    const deadline = nowClosed ? null : (document.getElementById('deadline-input').value
+        ? new Date(document.getElementById('deadline-input').value).toISOString() : null);
     try {
-        await metaDoc('config').set({ registrationClosed: nowClosed }, { merge: true });
-        updateRegistrationUI(nowClosed);
+        await metaDoc('config').set({ registrationClosed: nowClosed, registrationDeadline: nowClosed ? firebase.firestore.FieldValue.delete() : (deadline || firebase.firestore.FieldValue.delete()) }, { merge: true });
+        updateRegistrationUI(nowClosed, nowClosed ? null : deadline);
     } catch(e) { console.warn('toggleRegistration:', e.message); }
+}
+
+async function saveDeadline() {
+    const val = document.getElementById('deadline-input').value;
+    const dlSt = document.getElementById('deadline-st');
+    if (!val) { dlSt.textContent = 'Ange ett datum och tid.'; dlSt.style.display = 'block'; return; }
+    const iso = new Date(val).toISOString();
+    try {
+        await metaDoc('config').set({ registrationDeadline: iso }, { merge: true });
+        const dlDate = new Date(iso);
+        dlSt.textContent = 'Stängs automatiskt: ' + dlDate.toLocaleString('sv-SE');
+        dlSt.style.display = 'block';
+        document.getElementById('deadline-clear-btn').style.display = '';
+    } catch(e) { dlSt.textContent = 'Fel: ' + e.message; dlSt.style.display = 'block'; }
+}
+
+async function clearDeadline() {
+    const dlSt = document.getElementById('deadline-st');
+    try {
+        await metaDoc('config').set({ registrationDeadline: firebase.firestore.FieldValue.delete() }, { merge: true });
+        document.getElementById('deadline-input').value = '';
+        dlSt.style.display = 'none';
+        document.getElementById('deadline-clear-btn').style.display = 'none';
+    } catch(e) { dlSt.textContent = 'Fel: ' + e.message; dlSt.style.display = 'block'; }
 }
 
 async function showAdminContent() {
@@ -552,8 +601,15 @@ async function showAdminContent() {
             document.getElementById('fd-key').value = apiKey;
             startAutoFetch();
         }
-        updateRegistrationUI(!!(cfgSnap?.data()?.registrationClosed));
-        if (cfgSnap?.data()?.rules) document.getElementById('rules-text').value = cfgSnap.data().rules;
+        const cfgData = cfgSnap?.data() || {};
+        const deadline = cfgData.registrationDeadline || null;
+        const isClosedByDeadline = deadline && new Date(deadline) <= new Date();
+        if (isClosedByDeadline && !cfgData.registrationClosed) {
+            await metaDoc('config').set({ registrationClosed: true }, { merge: true }).catch(() => {});
+            cfgData.registrationClosed = true;
+        }
+        updateRegistrationUI(!!cfgData.registrationClosed, deadline);
+        if (cfgData.rules) document.getElementById('rules-text').value = cfgData.rules;
         const tsnap = await metaDoc('tabell').get();
         if (tsnap.exists) {
             if (tsnap.data().comment) document.getElementById('tabell-comment').value = tsnap.data().comment;
