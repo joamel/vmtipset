@@ -20,7 +20,8 @@
         .fi label { display: block; font-size: .7rem; font-weight: 600; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
         .fi input { width: 100%; padding: 9px 10px; border: 1.5px solid #ddd; border-radius: 7px; font-size: .92rem; background: #fafafa; transition: border-color .13s; }
         .fi input:focus { outline: none; border-color: #003087; background: #fff; }
-        .create-btn { width: 100%; margin-top: 12px; padding: 13px; background: #1a9e3f; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+        .create-btn { width: 100%; margin-top: 12px; padding: 13px; background: #1a9e3f; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: filter .15s, transform .1s; }
+        .create-btn:active:not([disabled]) { filter: brightness(.88); transform: scale(.98); }
         .create-btn:active { background: #157d33; }
         .created-box { margin-top: 12px; padding: 12px; background: #f0f9f4; border: 1.5px solid #4caf50; border-radius: 8px; }
         .created-box .cl { font-size: .72rem; font-weight: 700; text-transform: uppercase; color: #1a9e3f; margin-bottom: 6px; }
@@ -46,7 +47,10 @@
         .notice { padding: 10px 12px; background: #fff8e1; border-left: 3px solid #f59e0b; border-radius: 6px; font-size: .82rem; color: #7a5c00; margin-bottom: 11px; }
         #toast { position: fixed; top: 66px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 9px 18px; border-radius: 20px; font-size: .88rem; z-index: 300; opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap; }
         #toast.on { opacity: 1; }
-        .hbtn { background: rgba(255,255,255,.15); border: none; color: #fff; padding: 5px 12px; border-radius: 6px; font-size: .8rem; cursor: pointer; text-decoration: none; display: inline-block; }
+        .hbtn { background: rgba(255,255,255,.15); border: none; color: #fff; padding: 5px 12px; border-radius: 6px; font-size: .8rem; cursor: pointer; text-decoration: none; display: inline-block; transition: opacity .15s, transform .1s; }
+        .hbtn:active { opacity: .7; transform: scale(.95); }
+        .la-cp, .la-open, .la-del { transition: filter .15s, transform .1s; }
+        .la-cp:active, .la-open:active, .la-del:active:not([disabled]) { filter: brightness(.88); transform: scale(.95); }
     </style>
 </head>
 <body>
@@ -87,7 +91,7 @@
                 <span id="registration-status" style="font-size:.83rem;color:#555"></span>
                 <button id="registration-btn" onclick="toggleRegistration()" style="border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap"></button>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div id="deadline-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                 <label style="font-size:.8rem;color:#666;flex-shrink:0">Deadline:</label>
                 <input type="datetime-local" id="deadline-input" style="font-size:.8rem;padding:3px 7px;border:1px solid #ddd;border-radius:5px;flex:1;min-width:160px">
                 <button onclick="saveDeadline()" style="border:none;border-radius:5px;padding:4px 10px;font-size:.78rem;font-weight:700;cursor:pointer;background:#003087;color:#fff;white-space:nowrap">Spara</button>
@@ -509,6 +513,7 @@ function updateRegistrationUI(closed, deadline) {
     const status     = document.getElementById('registration-status');
     const dlSt       = document.getElementById('deadline-st');
     const dlClear    = document.getElementById('deadline-clear-btn');
+    const dlRow      = document.getElementById('deadline-row');
     regSection.style.display = 'flex';
     if (closed) {
         createCard.style.display = 'none';
@@ -516,12 +521,15 @@ function updateRegistrationUI(closed, deadline) {
         status.textContent = 'Anmälan stängd';
         btn.textContent = 'Öppna anmälan';
         btn.style.cssText = 'border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;background:#1a9e3f;color:#fff';
+        dlRow.style.display = 'none';
+        dlSt.style.display = 'none';
     } else {
         createCard.style.display = '';
         importCard.style.display = 'block';
         status.textContent = 'Anmälan öppen';
         btn.textContent = 'Stäng anmälan';
         btn.style.cssText = 'border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;background:#e53935;color:#fff';
+        dlRow.style.display = 'flex';
     }
     if (deadline) {
         const dlDate = new Date(deadline);
