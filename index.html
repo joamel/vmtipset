@@ -384,6 +384,7 @@ async function createLink() {
         if (snap?.exists && snap.data()?.registrationClosed) return;
     }
     const name = document.getElementById('new-name').value.trim();
+    if (!name) { document.getElementById('new-name').focus(); return; }
     const id   = genId();
     const url  = location.origin + location.pathname + '?k=' + id + '&g=' + encodeURIComponent(groupId || DEFAULT_GROUP);
     if (db) {
