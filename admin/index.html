@@ -346,20 +346,6 @@ async function cfgSnapshots() {
 
 async function initAdmin() {
     if (authStore.getItem(_authKey) === 'ok') {
-        if (db) {
-            try {
-                const [g, r] = await Promise.all([
-                    metaDoc('config').get().catch(() => null),
-                    db.collection('meta').doc('config').get().catch(() => null)
-                ]);
-                const isHash = pw => !pw || /^[0-9a-f]{64}$/.test(pw);
-                if (!isHash(g?.data()?.adminPassword) || !isHash(r?.data()?.adminPassword)) {
-                    authStore.removeItem(_authKey);
-                    await checkFirstRun();
-                    return;
-                }
-            } catch(e) {}
-        }
         showAdminContent();
     } else {
         await checkFirstRun();
