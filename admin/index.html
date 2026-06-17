@@ -618,6 +618,12 @@ async function showAdminContent() {
             metaDoc('config').get().catch(() => null),
             db.collection('meta').doc('config').get().catch(() => null)
         ]);
+        const isHash = pw => !pw || /^[0-9a-f]{64}$/.test(pw);
+        if (!isHash(cfgSnap?.data()?.adminPassword) || !isHash(rootCfgSnap?.data()?.adminPassword)) {
+            localStorage.removeItem('adminAuth_' + (groupId || DEFAULT_GROUP));
+            location.reload();
+            return;
+        }
         const apiKey = cfgSnap?.data()?.fdApiKey || rootCfgSnap?.data()?.fdApiKey;
         if (!groupId && apiKey) {
             document.getElementById('fd-key').value = apiKey;
