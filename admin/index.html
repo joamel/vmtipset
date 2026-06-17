@@ -517,6 +517,7 @@ function updateRegistrationUI(closed, deadline) {
     regSection.style.display = 'flex';
     if (closed) {
         createCard.style.display = 'none';
+        importCard.style.display = 'block';
         status.textContent = 'Anmälan stängd';
         btn.textContent = 'Öppna anmälan';
         btn.style.cssText = 'border:none;border-radius:6px;padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;background:#1a9e3f;color:#fff';
