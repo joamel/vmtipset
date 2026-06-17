@@ -65,6 +65,11 @@
 <div class="wrap">
     <div id="fb-notice" class="notice" style="display:none">Firebase är inte konfigurerat — kuponger sparas bara lokalt.</div>
 
+    <div class="card" id="reset-requests-card" style="display:none;border:2px solid #f59e0b">
+        <div class="ct" style="color:#b06500">🔑 Lösenordsförfrågningar</div>
+        <div id="reset-requests-list"></div>
+    </div>
+
     <div class="card" id="create-card">
         <div class="ct">Skapa kupong</div>
         <form autocomplete="off" onsubmit="createLink();return false">
@@ -88,6 +93,10 @@
                 <div id="pw-err">Fel lösenord – försök igen</div>
                 <button class="create-btn" id="pw-btn" type="submit" style="margin-top:0">Lås upp</button>
             </form>
+            <div id="reset-req-section" style="display:none;margin-top:10px;text-align:center">
+                <button onclick="requestPasswordReset()" style="background:none;border:none;color:#888;font-size:.82rem;cursor:pointer;text-decoration:underline">Glömt lösenordet?</button>
+                <div id="reset-req-st" style="font-size:.8rem;color:#1a9e3f;margin-top:4px;display:none">✓ Förfrågan skickad — vänta på att admin beviljar</div>
+            </div>
         </div>
         <div id="links-list" style="display:none"></div>
     </div>
@@ -315,16 +324,44 @@ async function checkFirstRun() {
     if (!db) return;
     try {
         const { g, r } = await cfgSnapshots();
-        const hasPw = (g?.exists && g.data()?.adminPassword) || (r?.exists && r.data()?.adminPassword);
+        // For group admins, only their own config counts — root password must not block reset flow
+        const hasPw = groupId
+            ? !!(g?.exists && g.data()?.adminPassword)
+            : !!(g?.exists && g.data()?.adminPassword) || !!(r?.exists && r.data()?.adminPassword);
         if (!hasPw) {
             document.getElementById('pw-input').placeholder = 'Välj ett adminlösenord';
             document.getElementById('pw-btn').textContent = 'Spara lösenord';
             document.getElementById('pw-btn').onclick = savePassword;
+        } else if (groupId) {
+            document.getElementById('reset-req-section').style.display = 'block';
         }
         if (g?.data()?.registrationClosed) {
             document.getElementById('create-card').style.display = 'none';
         }
     } catch(e) {}
+}
+
+async function requestPasswordReset() {
+    if (!groupId || !db) return;
+    try {
+        await db.collection('meta').doc('resetRequests').set(
+            { [groupId]: { requestedAt: new Date().toISOString() } },
+            { merge: true }
+        );
+        const st = document.getElementById('reset-req-st');
+        st.style.display = 'block';
+        document.querySelector('#reset-req-section button').style.display = 'none';
+    } catch(e) {}
+}
+
+async function approvePasswordReset(gid) {
+    try {
+        await db.collection('groups').doc(gid).collection('meta').doc('config')
+            .update({ adminPassword: firebase.firestore.FieldValue.delete() });
+        await db.collection('meta').doc('resetRequests')
+            .update({ [gid]: firebase.firestore.FieldValue.delete() });
+        toast(`✓ Lösenord nollställt för "${gid}"`);
+    } catch(e) { toast('Fel: ' + e.message); }
 }
 
 async function tryLogin() {
@@ -481,6 +518,7 @@ async function showAdminContent() {
         }
     } catch(e) {}
     startAdminListener();
+    if (!groupId) startResetRequestsListener();
 }
 
 async function updateTabell() {
@@ -533,6 +571,25 @@ function logout() {
     autoFetchStarted = false;
     localStorage.removeItem('adminAuth_' + (groupId || DEFAULT_GROUP));
     location.reload();
+}
+
+function startResetRequestsListener() {
+    db.collection('meta').doc('resetRequests').onSnapshot(snap => {
+        const card = document.getElementById('reset-requests-card');
+        const list = document.getElementById('reset-requests-list');
+        const data = snap.exists ? snap.data() : {};
+        const pending = Object.entries(data).filter(([, v]) => v?.requestedAt);
+        if (!pending.length) { card.style.display = 'none'; return; }
+        card.style.display = 'block';
+        list.innerHTML = pending.map(([gid, v]) => `
+            <div class="link-row">
+                <div class="link-info">
+                    <div class="link-name">${gid}</div>
+                    <div class="link-date">${new Date(v.requestedAt).toLocaleString('sv-SE')}</div>
+                </div>
+                <button class="la-open" onclick="approvePasswordReset('${gid}')">Bevilja</button>
+            </div>`).join('');
+    });
 }
 
 function startAdminListener() {
