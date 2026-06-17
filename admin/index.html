@@ -329,9 +329,19 @@ async function checkFirstRun() {
             ? !!(g?.exists && g.data()?.adminPassword)
             : !!(g?.exists && g.data()?.adminPassword) || !!(r?.exists && r.data()?.adminPassword);
         if (!hasPw) {
-            document.getElementById('pw-input').placeholder = 'Välj ett adminlösenord';
-            document.getElementById('pw-btn').textContent = 'Spara lösenord';
-            document.getElementById('pw-btn').onclick = savePassword;
+            const wasReset = groupId && g?.exists; // doc exists but no password = approved reset
+            const inp = document.getElementById('pw-input');
+            const btn = document.getElementById('pw-btn');
+            inp.placeholder = wasReset ? 'Välj ett nytt lösenord' : 'Välj ett adminlösenord';
+            btn.textContent  = wasReset ? 'Spara nytt lösenord' : 'Spara lösenord';
+            btn.style.background = wasReset ? '#e67e00' : '';
+            btn.onclick = savePassword;
+            if (wasReset) {
+                const notice = document.createElement('div');
+                notice.style.cssText = 'background:#fff8e1;border-left:3px solid #e67e00;border-radius:6px;padding:10px 12px;font-size:.83rem;color:#7a5c00;margin-bottom:10px';
+                notice.textContent = '✓ Din återställningsbegäran har beviljats — välj ett nytt lösenord.';
+                document.getElementById('pw-section').prepend(notice);
+            }
         } else if (groupId) {
             document.getElementById('reset-req-section').style.display = 'block';
         }
