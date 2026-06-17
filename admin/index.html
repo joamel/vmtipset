@@ -305,6 +305,7 @@ const DEFAULT_GROUP = 'joakim';
 let importQueue = [], importGen = 0, importDropReady = false;
 let registrationClosed = false;
 let cachedLinks = [];
+let adminDeadlineTimer = null;
 
 // Base URL for kupong links (strips /admin/ from path)
 const KUPONG_BASE = location.origin + location.pathname.replace(/\/admin\/?$/, '/');
@@ -536,6 +537,17 @@ function updateRegistrationUI(closed, deadline) {
     }
 }
 
+function scheduleAdminDeadline(deadline) {
+    clearTimeout(adminDeadlineTimer);
+    if (!deadline) return;
+    const ms = new Date(deadline) - Date.now();
+    if (ms <= 0) return;
+    adminDeadlineTimer = setTimeout(async () => {
+        await metaDoc('config').set({ registrationClosed: true }, { merge: true }).catch(() => {});
+        updateRegistrationUI(true, deadline);
+    }, ms);
+}
+
 async function toggleRegistration() {
     const btn = document.getElementById('registration-btn');
     const nowClosed = btn.textContent === 'Stäng anmälan';
@@ -558,6 +570,7 @@ async function saveDeadline() {
         dlSt.textContent = 'Stängs automatiskt: ' + dlDate.toLocaleString('sv-SE');
         dlSt.style.display = 'block';
         document.getElementById('deadline-clear-btn').style.display = '';
+        scheduleAdminDeadline(iso);
     } catch(e) { dlSt.textContent = 'Fel: ' + e.message; dlSt.style.display = 'block'; }
 }
 
@@ -568,6 +581,7 @@ async function clearDeadline() {
         document.getElementById('deadline-input').value = '';
         dlSt.style.display = 'none';
         document.getElementById('deadline-clear-btn').style.display = 'none';
+        scheduleAdminDeadline(null);
     } catch(e) { dlSt.textContent = 'Fel: ' + e.message; dlSt.style.display = 'block'; }
 }
 
@@ -609,6 +623,7 @@ async function showAdminContent() {
             cfgData.registrationClosed = true;
         }
         updateRegistrationUI(!!cfgData.registrationClosed, deadline);
+        scheduleAdminDeadline(deadline);
         if (cfgData.rules) document.getElementById('rules-text').value = cfgData.rules;
         const tsnap = await metaDoc('tabell').get();
         if (tsnap.exists) {
