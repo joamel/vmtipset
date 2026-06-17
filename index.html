@@ -405,7 +405,22 @@ function updateKlarBtn() {
     });
 }
 
-function initParticipant() {
+async function initParticipant() {
+    if (db) {
+        let snap;
+        try { snap = await col('kuponger').doc(kupongId).get(); } catch(e) {}
+        if (!snap?.exists) {
+            document.getElementById('participant-page').innerHTML = `
+                <header><div class="hd"><span style="font-size:1.6rem;line-height:1">⚽</span><div><h1>VM 2026 Tipskupong</h1></div></div></header>
+                <div class="wrap"><div class="card" style="text-align:center;padding:40px 20px">
+                    <div style="font-size:2rem;margin-bottom:12px">🔍</div>
+                    <h2 style="font-size:1rem;margin-bottom:8px">Ogiltig kupong</h2>
+                    <p style="font-size:.85rem;color:#666;margin-bottom:16px">Den här länken verkar inte stämma.</p>
+                    <a href="./${groupId ? '?g='+encodeURIComponent(groupId) : ''}" style="display:inline-block;padding:10px 20px;background:#003087;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:.9rem">← Tillbaka till start</a>
+                </div></div>`;
+            return;
+        }
+    }
     render();
     if (db) {
         col('kuponger').doc(kupongId)
