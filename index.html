@@ -416,6 +416,23 @@ function updateKlarBtn() {
     });
 }
 
+function lockForm() {
+    const notice = document.getElementById('registration-closed-notice');
+    if (notice) return;
+    const wrap = document.querySelector('.wrap');
+    if (wrap) {
+        const el = document.createElement('div');
+        el.id = 'registration-closed-notice';
+        el.style.cssText = 'background:#fff8e1;border:1px solid #f9a825;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.85rem;color:#7a5c00;font-weight:600';
+        el.textContent = 'Anmälan är stängd — kupongen kan inte längre redigeras.';
+        wrap.prepend(el);
+    }
+    document.querySelectorAll('#fn,#fa,#fe,.gi').forEach(el => {
+        el.disabled = true;
+        el.style.opacity = '0.5';
+    });
+}
+
 async function initParticipant() {
     if (db) {
         let snap;
@@ -443,6 +460,9 @@ async function initParticipant() {
             });
         resultsDoc().onSnapshot(snap => {
             if (snap.exists) { RESULTS = snap.data().results || []; updateMatchColors(); }
+        });
+        metaDoc('config').onSnapshot(snap => {
+            if (snap.exists && snap.data()?.registrationClosed) lockForm();
         });
         startResultsRefresh();
         return;

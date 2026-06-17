@@ -286,6 +286,8 @@ const groupId    = _params.get('g') || null;
 const DEFAULT_GROUP = 'joakim';
 
 let importQueue = [], importGen = 0, importDropReady = false;
+let registrationClosed = false;
+let cachedLinks = [];
 
 // Base URL for kupong links (strips /admin/ from path)
 const KUPONG_BASE = location.origin + location.pathname.replace(/\/admin\/?$/, '/');
@@ -480,6 +482,8 @@ function startAutoFetch() {
 }
 
 function updateRegistrationUI(closed) {
+    registrationClosed = closed;
+    if (cachedLinks.length) renderLinksFromData(cachedLinks);
     const regSection = document.getElementById('registration-section');
     const createCard = document.getElementById('create-card');
     const importCard = document.getElementById('import-card');
@@ -558,7 +562,7 @@ async function updateTabell() {
     try {
         const [rSnap, kSnap] = await Promise.all([resultsDoc().get(), col('kuponger').get()]);
         const results  = rSnap.exists ? (rSnap.data().results || []) : [];
-        const kuponger = kSnap.docs.map(d => ({ ...d.data() }));
+        const kuponger = kSnap.docs.map(d => ({ ...d.data() })).filter(k => !k.excluded);
         const nextItems = M.map((m,i)=>({m,i})).filter(({i})=>{const r=results[i];return !r||r.status!=='FINISHED';}).sort((a,b)=>matchStartUtc(a.m)-matchStartUtc(b.m)).slice(0,3);
         const nextMatches = nextItems.map(({m})=>({label:m.h+' – '+m.b,time:m.t+' '+m.d.replace(/^\w+ /,'')}));
         const rows = kuponger.map(k=>{
@@ -624,7 +628,7 @@ function startResetRequestsListener() {
 function startAdminListener() {
     if (db) {
         col('kuponger').onSnapshot(
-            snap => renderLinksFromData(snap.docs.map(d => ({ id: d.id, name: d.data().label || d.data().namn || '', createdAt: d.data().createdAt || '', klar: !!d.data().klar })).sort((a,b) => a.createdAt < b.createdAt ? 1 : -1)),
+            snap => renderLinksFromData(snap.docs.map(d => ({ id: d.id, name: d.data().label || d.data().namn || '', createdAt: d.data().createdAt || '', klar: !!d.data().klar, excluded: !!d.data().excluded })).sort((a,b) => a.createdAt < b.createdAt ? 1 : -1)),
             err => {
                 document.getElementById('links-list').innerHTML = `<p style="color:#e53935;font-size:.85rem">⚠ Kunde inte läsa kuponger: ${err.message}<br><span style="color:#888">Kontrollera att Firestore-reglerna inte gått ut i Firebase-konsolen.</span></p>`;
             }
@@ -668,24 +672,45 @@ async function createLink() {
 }
 
 function renderLinksFromData(links) {
+    cachedLinks = links;
     const el = document.getElementById('links-list');
     if (!links.length) { el.innerHTML = '<p style="color:#888;font-size:.9rem">Inga kuponger ännu.</p>'; return; }
-    el.innerHTML = links.map(l => {
+    const sorted = [...links].sort((a, b) => {
+        if (a.excluded !== b.excluded) return a.excluded ? 1 : -1;
+        return a.createdAt < b.createdAt ? 1 : -1;
+    });
+    el.innerHTML = sorted.map(l => {
         const url  = KUPONG_BASE + '?k=' + l.id + '&g=' + encodeURIComponent(groupId || DEFAULT_GROUP);
         const date = l.createdAt ? new Date(l.createdAt).toLocaleDateString('sv-SE') : '';
-        const check = l.klar ? ' <span style="color:#22a349;font-size:1rem">✓</span>' : '';
-        return `<div class="link-row">
+        const statusBadge = registrationClosed
+            ? (l.klar
+                ? ' <span style="color:#22a349;font-size:1rem" title="Klar">✓</span>'
+                : ' <span style="color:#e69900;font-size:.95rem" title="Inte klar">⚠</span>')
+            : (l.klar ? ' <span style="color:#22a349;font-size:1rem">✓</span>' : '');
+        const excludedBadge = l.excluded ? ' <span style="background:#e0e0e0;color:#777;font-size:.72rem;padding:1px 6px;border-radius:10px;vertical-align:middle;font-weight:600">EJ MED</span>' : '';
+        const delBtn = l.klar
+            ? `<button class="la-del" style="cursor:default;background:#fce8e8;color:#f4a0a0" disabled>✕</button>`
+            : `<button class="la-del" onclick="deleteKupong('${l.id}','${l.name}')">✕</button>`;
+        const excludeBtn = l.excluded
+            ? `<button class="la-cp" style="font-size:.78rem" onclick="toggleExcluded('${l.id}',false)">Inkludera</button>`
+            : `<button class="la-cp" style="font-size:.78rem;color:#c0392b" onclick="toggleExcluded('${l.id}',true)">Ej med</button>`;
+        return `<div class="link-row" style="${l.excluded ? 'opacity:.45' : ''}">
             <div class="link-info">
-                <div class="link-name">${l.name || 'Namnlös kupong'}${check}</div>
+                <div class="link-name">${l.name || 'Namnlös kupong'}${statusBadge}${excludedBadge}</div>
                 <div class="link-date">Skapad ${date}</div>
             </div>
             <div class="link-actions">
+                ${excludeBtn}
                 <button class="la-cp" onclick="copyText('${url}')">Kopiera</button>
                 <a class="la-open" href="${url}">Öppna</a>
-                ${l.klar ? '' : `<button class="la-del" onclick="deleteKupong('${l.id}','${l.name}')">✕</button>`}
+                ${delBtn}
             </div>
         </div>`;
     }).join('');
+}
+
+async function toggleExcluded(id, exclude) {
+    if (db) await col('kuponger').doc(id).update({ excluded: exclude }).catch(() => {});
 }
 
 async function deleteKupong(id, name) {
