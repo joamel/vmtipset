@@ -354,6 +354,12 @@ if (groupId) {
     const backLink = document.getElementById('part-back-link');
     if (backLink) backLink.href = './?g=' + encodeURIComponent(groupId);
 }
+document.getElementById('part-back-link')?.addEventListener('click', function(e) {
+    if (document.referrer && new URL(document.referrer).origin === location.origin) {
+        e.preventDefault();
+        history.back();
+    }
+});
 
 if (kupongId) {
     document.getElementById('participant-page').style.display = 'block';
