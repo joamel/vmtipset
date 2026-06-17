@@ -72,6 +72,7 @@
 
     <div class="card" id="create-card">
         <div class="ct">Skapa kupong</div>
+        <p id="create-desc" style="display:none;font-size:.85rem;color:#666;margin-bottom:12px">Skapa en kupong och skicka länken till deltagaren — de fyller i sina tips direkt via länken.</p>
         <form autocomplete="off" onsubmit="createLink();return false">
             <div class="fi"><label>Namn på deltagaren</label><input type="text" id="new-name" placeholder="t.ex. Anna Andersson" autocomplete="off"></div>
             <button class="create-btn" id="create-btn" type="submit">Skapa tips-kupong</button>
@@ -514,6 +515,7 @@ async function showAdminContent() {
     document.getElementById('links-list').style.display = 'block';
     document.getElementById('logout-btn').style.display = 'block';
     document.getElementById('create-btn').textContent = 'Skapa länk';
+    document.getElementById('create-desc').style.display = 'block';
     initImportDrop();
     document.getElementById('results-card').style.display = 'block';
     if (groupId) {
