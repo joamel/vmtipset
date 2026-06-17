@@ -419,8 +419,10 @@ async function createLink() {
 
 let saveTimer = null;
 let klarStatus = false;
+let formLocked = false;
 
 function toggleKlar() {
+    if (formLocked) return;
     klarStatus = !klarStatus;
     updateKlarBtn();
     if (db) col('kuponger').doc(kupongId).update({ klar: klarStatus }).catch(() => {});
@@ -469,17 +471,24 @@ function startCountdown(deadline, existingInterval) {
 }
 
 function lockForm() {
-    if (document.getElementById('registration-closed-notice')) return;
-    const banner = document.createElement('div');
-    banner.id = 'registration-closed-notice';
-    banner.style.cssText = 'background:#e53935;color:#fff;text-align:center;padding:9px 14px;font-size:.88rem;font-weight:700;letter-spacing:.02em';
-    banner.textContent = '🔒 Tipset är stängt — kupongen kan inte längre redigeras';
-    const stickyTop = document.querySelector('#participant-page .sticky-top');
-    if (stickyTop) stickyTop.appendChild(banner);
+    formLocked = true;
     document.querySelectorAll('#fn,#fa,#fe,.gi').forEach(el => {
         el.disabled = true;
         el.style.opacity = '0.5';
     });
+    const klarBtn = document.getElementById('klar-btn');
+    if (klarBtn) { klarBtn.disabled = true; klarBtn.style.opacity = '0.5'; }
+    if (document.getElementById('registration-closed-notice')) return;
+    const banner = document.createElement('div');
+    banner.id = 'registration-closed-notice';
+    banner.style.cssText = 'background:#e53935;color:#fff;text-align:center;padding:9px 14px;font-size:.88rem;font-weight:700;letter-spacing:.02em;transition:opacity .6s';
+    banner.textContent = '🔒 Tipset är stängt — kupongen kan inte längre redigeras';
+    const stickyTop = document.querySelector('#participant-page .sticky-top');
+    if (stickyTop) stickyTop.appendChild(banner);
+    setTimeout(() => {
+        banner.style.opacity = '0';
+        setTimeout(() => banner.remove(), 650);
+    }, 8000);
 }
 
 async function initParticipant() {
@@ -598,6 +607,7 @@ function applyState(s) {
 }
 
 function save() {
+    if (formLocked) return;
     try { localStorage.setItem('vmt26_' + kupongId, JSON.stringify(getState())); } catch(e) {}
     updateProg();
     clearTimeout(saveTimer);
