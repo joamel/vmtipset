@@ -311,6 +311,13 @@ let registrationClosed = false;
 let cachedLinks = [];
 let adminDeadlineTimer = null;
 
+// Safe auth storage — falls back to sessionStorage if localStorage is blocked
+const _authKey = 'adminAuth_' + (groupId || DEFAULT_GROUP);
+const authStore = (() => {
+    try { localStorage.setItem('_ls_test', '1'); localStorage.removeItem('_ls_test'); return localStorage; }
+    catch(e) { return sessionStorage; }
+})();
+
 // Base URL for kupong links (strips /admin/ from path)
 const KUPONG_BASE = location.origin + location.pathname.replace(/\/admin\/?$/, '/');
 
@@ -338,7 +345,7 @@ async function cfgSnapshots() {
 }
 
 async function initAdmin() {
-    if (localStorage.getItem('adminAuth_' + (groupId || DEFAULT_GROUP)) === 'ok') {
+    if (authStore.getItem(_authKey) === 'ok') {
         if (db) {
             try {
                 const [g, r] = await Promise.all([
@@ -347,7 +354,7 @@ async function initAdmin() {
                 ]);
                 const isHash = pw => !pw || /^[0-9a-f]{64}$/.test(pw);
                 if (!isHash(g?.data()?.adminPassword) || !isHash(r?.data()?.adminPassword)) {
-                    localStorage.removeItem('adminAuth_' + (groupId || DEFAULT_GROUP));
+                    authStore.removeItem(_authKey);
                     await checkFirstRun();
                     return;
                 }
@@ -440,7 +447,7 @@ async function tryLogin() {
                 gOk && gPw === pw ? metaDoc('config').set({ adminPassword: hash }, { merge: true }).catch(() => {}) : null,
                 rOk && rPw === pw ? db.collection('meta').doc('config').set({ adminPassword: hash }, { merge: true }).catch(() => {}) : null,
             ]);
-            localStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
+            authStore.setItem(_authKey, 'ok');
             errEl.style.display = 'none';
             showAdminContent();
         } else {
@@ -448,7 +455,7 @@ async function tryLogin() {
             errEl.style.display = 'block';
         }
     } catch(e) {
-        errEl.textContent = 'Fel lösenord – försök igen';
+        errEl.textContent = 'Tekniskt fel: ' + e.message;
         errEl.style.display = 'block';
     }
 }
@@ -459,7 +466,7 @@ async function savePassword() {
     try {
         const hash = await hashPw(pw);
         await metaDoc('config').set({ adminPassword: hash }, { merge: true });
-        localStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
+        authStore.setItem(_authKey, 'ok');
         showAdminContent();
     } catch(e) {}
 }
@@ -707,7 +714,7 @@ async function resetGroupPassword() {
 
 function logout() {
     autoFetchStarted = false;
-    localStorage.removeItem('adminAuth_' + (groupId || DEFAULT_GROUP));
+    authStore.removeItem(_authKey);
     location.reload();
 }
 
@@ -746,7 +753,7 @@ function startAdminListener() {
 function genId() { return Math.random().toString(36).substr(2, 8); }
 
 async function createLink() {
-    const isAdmin = localStorage.getItem('adminAuth_' + (groupId || DEFAULT_GROUP)) === 'ok';
+    const isAdmin = authStore.getItem(_authKey) === 'ok';
     const name = document.getElementById('new-name').value.trim();
     if (!name) { document.getElementById('new-name').focus(); return; }
     const id   = genId();
