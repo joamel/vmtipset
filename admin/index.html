@@ -364,16 +364,31 @@ async function approvePasswordReset(gid) {
     } catch(e) { toast('Fel: ' + e.message); }
 }
 
+async function hashPw(pw) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function pwMatches(stored, hash, plain) {
+    return stored && (stored === hash || stored === plain);
+}
+
 async function tryLogin() {
     const pw = document.getElementById('pw-input').value;
     if (!pw) return;
     if (!db) { showAdminContent(); return; }
     const errEl = document.getElementById('pw-err');
     try {
+        const hash = await hashPw(pw);
         const { g, r } = await cfgSnapshots();
         const gPw = g?.exists ? g.data()?.adminPassword : null;
         const rPw = r?.exists ? r.data()?.adminPassword : null;
-        if ((gPw && gPw === pw) || (rPw && rPw === pw)) {
+        const gOk = pwMatches(gPw, hash, pw);
+        const rOk = pwMatches(rPw, hash, pw);
+        if (gOk || rOk) {
+            // Upgrade plaintext → hash on first login
+            if (gOk && gPw === pw) metaDoc('config').set({ adminPassword: hash }, { merge: true }).catch(() => {});
+            if (rOk && rPw === pw) db.collection('meta').doc('config').set({ adminPassword: hash }, { merge: true }).catch(() => {});
             localStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
             errEl.style.display = 'none';
             showAdminContent();
@@ -391,7 +406,8 @@ async function savePassword() {
     const pw = document.getElementById('pw-input').value.trim();
     if (!pw) return;
     try {
-        await metaDoc('config').set({ adminPassword: pw }, { merge: true });
+        const hash = await hashPw(pw);
+        await metaDoc('config').set({ adminPassword: hash }, { merge: true });
         localStorage.setItem('adminAuth_' + (groupId || DEFAULT_GROUP), 'ok');
         showAdminContent();
     } catch(e) {}
